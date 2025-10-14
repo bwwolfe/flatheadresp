@@ -1,11 +1,15 @@
 Package: flatheadresp
-Title: What the Package Does (One Line, Title Case)
+Title: Analyse respirometry data from AquaResp
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Barrett", "Wolfe", , "barrett.wolfe@utas.edu.au", role = c("aut", "cre"))
+Description: This package contains functions that streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the TAF lab for flathead metabolic rate experiments), including importing AquaResp metadata and files into R, correcting for post-hoc bodymass changes, and calculating MO2 from raw data, including coefficients of determination (R^2) to overcome the bug in the AquaResp v3.0 version where any missing O_2 values resulted in erroneous or missing R^2 values.  
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/bwwolfe/flatheadresp
+BugReports: https://github.com/bwwolfe/flatheadresp/issues
