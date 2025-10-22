@@ -25,7 +25,7 @@ fix_exp_MO2s <- function(path, chamber, new_mass) {
 
   i <- chamber
 
-  sum_path <- file.path(dir_path, paste0("Summary data resp ", i, ".txt"))
+  sum_path <- file.path(path, paste0("Summary data resp ", i, ".txt"))
 
   sum_data <-
     utils::read.table(sum_path,
