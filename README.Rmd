@@ -60,7 +60,8 @@ get_exp_metadata(exp_dir_path)
 Get AquaResp-calculated MO₂ for one chamber:
 
 ```{r}
-get_exp_MO2s(exp_dir_path, chamber = 2)
+chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
+head(chamber2_mo2s)
 ```
 
 Or for all chambers:
@@ -112,7 +113,7 @@ Visualize MO₂ across cycles:
 ```{r}
 mo2s <- transform(mo2s, chamber = factor(chamber))
 
-ggplot(mo2s |> subset(chamber != 5),
+ggplot(mo2s,
        aes(x = TIME.HOURS, y = MO2 / 100,
            colour = chamber, shape = chamber)) +
   geom_path(linewidth = 0.3) +
@@ -122,6 +123,22 @@ ggplot(mo2s |> subset(chamber != 5),
   scale_x_continuous("Hours since start", expand = c(0.03, 0), n.breaks = 20) +
   scale_y_continuous("Mass-specific MO₂")
 ```
+
+Note that chamber 4 was the background respiration with the mass entered as an arbitrary 1 g, so it may make more sense to plot with it removed:
+
+```{r}
+
+ggplot(mo2s |> subset(chamber != 4),
+       aes(x = TIME.HOURS, y = MO2 / 100,
+           colour = chamber, shape = chamber)) +
+  geom_path(linewidth = 0.3) +
+  geom_point(size = 2.5) +
+  scale_colour_tableau("Tableau 10") +
+  theme_cowplot(12) +
+  scale_x_continuous("Hours since start", expand = c(0.03, 0), n.breaks = 20) +
+  scale_y_continuous("Mass-specific MO₂")
+```
+
 
 ## Cycle Summary
 
@@ -154,20 +171,6 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   theme_cowplot(12) +
   scale_x_continuous(breaks = 1:max(cyc_po2_long$cycle)) +
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
-```
-
-## Estimating SMR
-
-Example: compute 20th percentile MO₂ for resting period:
-
-```{r}
-resting_mo2s <- mo2s[mo2s$TIME.HOURS >= 10,]
-
-SMR_q20 <- sapply(1:3, \(x) {
-  data <- subset(resting_mo2s, chamber == x)
-  quantile(data$MO2[data$R.2 >= 0.96], 0.2)
-})
-SMR_q20
 ```
 
 ## Next Steps
