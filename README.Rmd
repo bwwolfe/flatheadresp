@@ -31,18 +31,150 @@ pak::pak("bwwolfe/flatheadresp")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
-
-```{r example}
+```{r}
 library(flatheadresp)
-## basic example code
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+library(ggthemes)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## Load Example Data
 
-```{r cars}
-summary(cars)
+The package ships an example AquaResp experiment under `inst/extdata/aquaresp_experiment` that is used in the examples in the documentation. Use `system.file()` to locate it:
+
+```{r}
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+exp_dir_path
 ```
+
+## Experimental Metadata and MO₂
+
+Retrieve metadata for all chambers:
+
+```{r}
+get_exp_metadata(exp_dir_path)
+```
+
+Get AquaResp-calculated MO₂ for one chamber:
+
+```{r}
+get_exp_MO2s(exp_dir_path, chamber = 2)
+```
+
+Or for all chambers:
+
+```{r}
+mo2s <- get_exp_MO2s(exp_dir_path)
+head(mo2s)
+```
+
+Correct MO₂ if a fish mass was entered incorrectly:
+
+```{r}
+fix_exp_MO2s(exp_dir_path, chamber = 1, new_mass = 0.200)
+```
+
+## Cycle-Level Data
+
+Read a single cycle file:
+
+```{r}
+cycle <- read_cycle(cycle_number = 9, path = exp_dir_path)
+head(cycle)
+```
+
+Convert to long format for plotting:
+
+```{r}
+cycle_long <- cycle %>%
+  pivot_longer(cols = starts_with("ch"),
+               names_to = "chamber",
+               names_pattern = "ch(\\d)\\.po2",
+               values_to = "po2")
+```
+
+Plot PO₂ over time:
+
+```{r}
+ggplot(cycle_long |> subset(po2 > 0),
+       aes(Unix.Time - min(Unix.Time), po2, colour = chamber)) +
+  geom_path() +
+  scale_colour_tableau("Tableau 10") +
+  theme_cowplot(12)
+```
+
+## MO₂ Trends Over Time
+
+Visualize MO₂ across cycles:
+
+```{r}
+mo2s <- transform(mo2s, chamber = factor(chamber))
+
+ggplot(mo2s |> subset(chamber != 5),
+       aes(x = TIME.HOURS, y = MO2 / 100,
+           colour = chamber, shape = chamber)) +
+  geom_path(linewidth = 0.3) +
+  geom_point(size = 2.5) +
+  scale_colour_tableau("Tableau 10") +
+  theme_cowplot(12) +
+  scale_x_continuous("Hours since start", expand = c(0.03, 0), n.breaks = 20) +
+  scale_y_continuous("Mass-specific MO₂")
+```
+
+## Cycle Summary
+
+Summarize PO₂ ranges and correlations:
+
+```{r}
+cyc_summary <- get_exp_cycle_summary(exp_dir_path)
+head(cyc_summary)
+```
+
+Plot PO₂ min/max per cycle:
+
+```{r}
+cyc_po2_range <- cyc_summary[, 1:8]
+cyc_po2_range$cycle <- 1:nrow(cyc_po2_range)
+
+cyc_po2_long <- cyc_po2_range %>%
+  pivot_longer(cols = -cycle,
+               names_to = c("chamber", "po2type"),
+               names_pattern = "ch(\\d+)\\.po2\\.(min|max)",
+               values_to = "po2") %>%
+  pivot_wider(names_from = po2type, values_from = po2)
+
+ggplot(cyc_po2_long |> subset(chamber != "000"),
+       aes(x = cycle, colour = chamber)) +
+  geom_segment(aes(y = min, yend = max),
+               position = position_dodge2(width = .6),
+               linewidth = 0.8) +
+  scale_colour_tableau("Classic 10") +
+  theme_cowplot(12) +
+  scale_x_continuous(breaks = 1:max(cyc_po2_long$cycle)) +
+  scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
+```
+
+## Estimating SMR
+
+Example: compute 20th percentile MO₂ for resting period:
+
+```{r}
+resting_mo2s <- mo2s[mo2s$TIME.HOURS >= 10,]
+
+SMR_q20 <- sapply(1:3, \(x) {
+  data <- subset(resting_mo2s, chamber == x)
+  quantile(data$MO2[data$R.2 >= 0.96], 0.2)
+})
+SMR_q20
+```
+
+## Next Steps
+
+- Explore `plot_cycle_po2()` for quick cycle plots.
+- Use `fix_exp_MO2s()` for correcting metadata errors.
+- Combine summaries for multi-experiment comparisons.
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
 
