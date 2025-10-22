@@ -26,10 +26,10 @@ read_cycle <-
                         header = TRUE)
     if ("X" %in% names(res) &&
         all(is.na(res$X)))
-      res <- subset(res, select = -X)
+      res <- res[, setdiff(names(res), "X"), drop = FALSE]
+
     return(res)
   }
-
 
 #' Calculate MO2 values for a specific AquaResp cycle
 #'
