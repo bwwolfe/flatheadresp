@@ -12,14 +12,17 @@ read_cycle(cycle_number, path)
 \item{path}{Character. The path to the AquaResp experiment directory.}
 }
 \value{
-A dataframe containing the data from the specified cycle
+A dataframe containing the data from the specified cycle.
 }
 \description{
-AquaResp stores each experimental cycle (i.e. the measurement period when MO2 is calculated as a seperate file.
-This function reads the data from a specific cycle file in the "All slopes" folder of an AquaResp experiment.
+AquaResp stores each experimental cycle (i.e., the measurement period when MO₂ is calculated)
+as a separate file. This function reads the data from a cycle file in the "All slopes" folder
+of an AquaResp experiment.
 }
 \examples{
+# Locate the example AquaResp experiment directory shipped with the package
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
+# Read cycle 1 from the example experiment
 read_cycle(cycle_number = 1, path = exp_dir_path)
 }

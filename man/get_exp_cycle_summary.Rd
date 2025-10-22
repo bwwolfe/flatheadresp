@@ -10,15 +10,15 @@ get_exp_cycle_summary(path)
 \item{path}{Character. The path to the AquaResp experiment directory.}
 }
 \value{
-A dataframe with one row per cycle and columns for each PO2 metric for each chamber.
+A dataframe with one row per cycle and columns for each PO₂ metric for each chamber.
 }
 \description{
-Generates a summary dataframe with PO2 statistics (min, max, correlation, missingness)
+Generates a summary dataframe with PO₂ statistics (min, max, correlation, missingness)
 for each cycle and chamber in the experiment. The correlations are calculated with
-missing values (po2 = 0) omitted to get around the bug in AquaResp.
+missing values (PO₂ = 0) omitted to get around the bug in AquaResp.
 }
 \examples{
-\dontrun{
-get_exp_cycle_summary(path = "~/data/Resp/Experiment_1")
-}
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+get_exp_cycle_summary(path = exp_dir_path)
 }

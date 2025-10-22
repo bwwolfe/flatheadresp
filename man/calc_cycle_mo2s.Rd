@@ -7,19 +7,20 @@
 calc_cycle_mo2s(cycle_number, path)
 }
 \arguments{
-\item{cycle_number}{Numeric. The cycle number to calculate MO2 for.}
+\item{cycle_number}{Numeric. The cycle number to calculate MO₂ for.}
 
 \item{path}{Character. The path to the AquaResp experiment directory.}
 }
 \value{
-A named numeric vector of MO2 values for each chamber.
+A named numeric vector of MO₂ values for each chamber.
 }
 \description{
-Calculates mass-specific oxygen consumption (MO2) for each chamber in a given cycle
-using linear regression on PO2 data and experimental metadata.
+Calculates mass-specific oxygen consumption (MO₂) for each chamber in a given cycle
+using linear regression on PO₂ data and experimental metadata.
 }
 \examples{
-\dontrun{
-calc_cycle_mo2s(cycle_number = 1, path = "~/data/Resp/Experiment_1")
-}
+# Example data directory shipped with the package
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+calc_cycle_mo2s(cycle_number = 1, path = exp_dir_path)
 }

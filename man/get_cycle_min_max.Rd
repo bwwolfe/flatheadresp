@@ -10,14 +10,14 @@ get_cycle_min_max(cycle)
 \item{cycle}{Dataframe. A cycle dataframe as returned by \code{read_cycle()}.}
 }
 \value{
-A named numeric vector of min and max PO2 values for each chamber.
+A named numeric vector of min and max PO₂ values for each chamber.
 }
 \description{
-Extracts the minimum and maximum non-zero PO2 values for each chamber from a cycle dataframe.
+Extracts the minimum and maximum non-zero PO₂ values for each chamber from a cycle dataframe.
 }
 \examples{
-\dontrun{
-cycle <- read_cycle(1, "~/data/Resp/Experiment_1")
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+cycle <- read_cycle(1, exp_dir_path)
 get_cycle_min_max(cycle)
-}
 }

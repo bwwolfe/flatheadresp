@@ -12,13 +12,13 @@ plot_cycle_po2(cycle_number, path)
 \item{path}{Character. The path to the AquaResp experiment directory.}
 }
 \value{
-A base-R plot of time vs PO2.
+A base-R plot of time vs PO₂.
 }
 \description{
-Generates a scatter plot of PO2 values over time for each chamber in a given cycle.
+Generates a scatter plot of PO₂ values over time for each chamber in a given cycle.
 }
 \examples{
-\dontrun{
-plot_cycle_po2(cycle_number = 1, path = "~/data/Resp/Experiment_1")
-}
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+plot_cycle_po2(cycle_number = 1, path = exp_dir_path)
 }

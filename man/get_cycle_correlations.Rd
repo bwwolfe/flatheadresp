@@ -13,11 +13,11 @@ get_cycle_correlations(cycle)
 A named numeric vector of correlation coefficients and p-values for each chamber.
 }
 \description{
-Performs Pearson correlation tests between PO2 values and Unix time for each chamber in a cycle.
+Performs Pearson correlation tests between PO₂ values and Unix time for each chamber in a cycle.
 }
 \examples{
-\dontrun{
-cycle <- read_cycle(1, "~/data/Resp/Experiment_1")
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+cycle <- read_cycle(1, exp_dir_path)
 get_cycle_correlations(cycle)
-}
 }

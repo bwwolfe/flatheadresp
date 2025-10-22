@@ -13,12 +13,12 @@ get_cycle_missingness(cycle)
 A named list of percentages (0–100) indicating missingness per chamber.
 }
 \description{
-Computes the percentage of zero values in each PO2 column of a cycle dataframe.
-Values greater than zero would have an incorrect R^2 as calculated by AquaResp.
+Computes the percentage of zero values in each PO₂ column of a cycle dataframe.
+Values greater than zero would have an incorrect R² as calculated by AquaResp.
 }
 \examples{
-\dontrun{
-cycle <- read_cycle(1, "~/data/Resp/Experiment_1")
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+cycle <- read_cycle(1, exp_dir_path)
 get_cycle_missingness(cycle)
-}
 }
