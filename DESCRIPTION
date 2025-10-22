@@ -13,3 +13,7 @@ Suggests:
 Config/testthat/edition: 3
 URL: https://github.com/bwwolfe/flatheadresp
 BugReports: https://github.com/bwwolfe/flatheadresp/issues
+Imports: 
+    graphics,
+    stats,
+    utils
