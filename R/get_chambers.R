@@ -46,7 +46,7 @@ get_chamber_metadata <- function(path, chamber) {
 
   sum_metadata <- list()
 
-  sum_path <- file.path(dir_path, paste0("Summary data resp ", chamber, ".txt"))
+  sum_path <- file.path(path, paste0("Summary data resp ", chamber, ".txt"))
 
   con <- file(sum_path, "r")
   for (j in 1:15) {
@@ -120,13 +120,14 @@ get_exp_MO2s <- function(path, chamber = NULL) {
     summary_data_list <-
       lapply(chambers, function(i) {
         sum_path <-
-          file.path(dir_path, paste0("Summary data resp ", i, ".txt"))
+          file.path(path, paste0("Summary data resp ", i, ".txt"))
 
         sum_data <-
           utils::read.table(sum_path,
                      skip = 15,
                      sep = ";",
-                     header = TRUE) |> subset(select = -X)
+                     header = TRUE) |>
+          (\(res) res[, setdiff(names(res), "X"), drop = FALSE])()
 
         return(data.frame(chamber = i, cycle = 1:nrow(sum_data), sum_data))
       })
@@ -138,13 +139,15 @@ get_exp_MO2s <- function(path, chamber = NULL) {
     summary_data_list <-
       lapply(chamber, function(i) {
         sum_path <-
-          file.path(dir_path, paste0("Summary data resp ", i, ".txt"))
+          file.path(path, paste0("Summary data resp ", i, ".txt"))
 
         sum_data <-
           utils::read.table(sum_path,
                      skip = 15,
                      sep = ";",
-                     header = TRUE) |> subset(select = -X)
+                     header = TRUE) |>
+          (\(res) res[, setdiff(names(res), "X"), drop = FALSE])()
+
 
         return(data.frame(chamber = i, cycle = 1:nrow(sum_data), sum_data))
       })
