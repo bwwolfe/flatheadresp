@@ -70,14 +70,14 @@ Get AquaResp-calculated MO₂s for a given chamber:
 
 ```{r}
 chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
-head(chamber2_mo2s)
+head(chamber2_mo2s, n = 3)
 ```
 
 Or for all chambers:
 
 ```{r}
 mo2s <- get_exp_MO2s(exp_dir_path)
-head(mo2s)
+head(mo2s, n = 3)
 ```
 
 Correct MO₂ if a fish mass was entered incorrectly:
@@ -92,10 +92,16 @@ Read a single cycle file:
 
 ```{r}
 cycle <- read_cycle(cycle_number = 9, path = exp_dir_path)
-head(cycle)
+head(cycle, n = 3)
 ```
 
-Convert to long format for plotting:
+Plot PO_2 across a given cycle:
+
+```{r}
+plot_cycle_po2(cycle_number = 9, path = exp_dir_path)
+```
+
+Alternatively, you can manipulate the cycle data and plot with ggplot2. Convert to long format for plotting:  
 
 ```{r}
 cycle_long <- cycle %>%
@@ -182,19 +188,3 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
 ```
 
-
-## Next Steps
-
-- Explore `plot_cycle_po2()` for quick cycle plots.
-- Use `fix_exp_MO2s()` for correcting metadata errors.
-- Combine summaries for multi-experiment comparisons.
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

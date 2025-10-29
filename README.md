@@ -67,7 +67,7 @@ documentation. Use `system.file()` to locate it:
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
 exp_dir_path
-#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath710437d16e3d/flatheadresp/extdata/aquaresp_experiment"
+#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath71043dec44e4/flatheadresp/extdata/aquaresp_experiment"
 ```
 
 The experiment directory is structured in the standard format used by
@@ -119,77 +119,50 @@ Get AquaResp-calculated MO₂s for a given chamber:
 
 ``` r
 chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
-head(chamber2_mo2s)
+head(chamber2_mo2s, n = 3)
 #>   chamber cycle          Clock.TIME TIME.HOURS  TIME.UNIX       MO2
 #> 1       2     1 2025-04-26 16:02:07  0.3502778 1745648526  88.72929
 #> 2       2     2 2025-04-26 16:27:07  0.7669444 1745650026 113.65878
 #> 3       2     3 2025-04-26 16:52:07  1.1836111 1745651526 109.80107
-#> 4       2     4 2025-04-26 17:17:07  1.6002778 1745653026 108.06524
-#> 5       2     5 2025-04-26 17:42:07  2.0169444 1745654527  99.44971
-#> 6       2     6 2025-04-26 18:07:07  2.4336111 1745656027  93.45417
 #>          SLOPE Intercept  Pearson.R       R.2             P      Std.Err
 #> 1 -0.005386100  101.8832 -0.9956077 0.9912346  0.000000e+00 1.463943e-05
 #> 2 -0.006899386  103.9502 -0.6513065 0.4242002 1.177663e-145 2.323345e-04
 #> 3 -0.006665212  102.9401 -0.9991329 0.9982665  0.000000e+00 8.024657e-06
-#> 4 -0.006559843  102.3915 -0.9985404 0.9970830  0.000000e+00 1.025102e-05
-#> 5 -0.006036858  101.0153 -0.9982962 0.9965954  0.000000e+00 1.019427e-05
-#> 6 -0.005672913  100.4844 -0.9988779 0.9977570  0.000000e+00 7.771076e-06
 #>   Measurement.duration.seconds  avg.po2 median.po2 minimum.po2 max.po2
 #> 1                         1199 98.65157    98.8040      95.181 101.435
 #> 2                         1199 99.81058    99.9280       0.000 103.549
 #> 3                         1200 98.93762    99.0055      94.807 102.842
-#> 4                         1200 98.45235    98.4890      94.276 102.205
-#> 5                         1200 97.39020    97.4000      93.605 100.770
-#> 6                         1200 97.07784    97.2040      93.540 100.267
 #>   delta.po2 oxygen.solubility ratio.vreal.fish total.experiment.duration.hours
 #> 1     6.254          8.062287         56.75862                       0.3502778
 #> 2   103.549          8.062287         56.75862                       0.7669444
 #> 3     8.035          8.062287         56.75862                       1.1836111
-#> 4     7.929          8.062287         56.75862                       1.6002778
-#> 5     7.165          8.062287         56.75862                       2.0169444
-#> 6     6.727          8.062287         56.75862                       2.4336111
-#>     minutes seconds       days
-#> 1  21.01667    1261 0.01459491
-#> 2  46.01667    2761 0.03195602
-#> 3  71.01667    4261 0.04931713
-#> 4  96.01667    5761 0.06667824
-#> 5 121.01667    7261 0.08403935
-#> 6 146.01667    8761 0.10140046
+#>    minutes seconds       days
+#> 1 21.01667    1261 0.01459491
+#> 2 46.01667    2761 0.03195602
+#> 3 71.01667    4261 0.04931713
 ```
 
 Or for all chambers:
 
 ``` r
 mo2s <- get_exp_MO2s(exp_dir_path)
-head(mo2s)
-#>   chamber cycle          Clock.TIME TIME.HOURS  TIME.UNIX       MO2       SLOPE
-#> 1       1     1 2025-04-26 16:02:07  0.3500000 1745648526 124.18925 -0.01630908
-#> 2       1     2 2025-04-26 16:27:07  0.7666667 1745650026 132.90175 -0.01745324
-#> 3       1     3 2025-04-26 16:52:07  1.1836111 1745651526 120.47219 -0.01582094
-#> 4       1     4 2025-04-26 17:17:07  1.6002778 1745653026  98.28319 -0.01290698
-#> 5       1     5 2025-04-26 17:42:07  2.0169444 1745654527  86.05319 -0.01130088
-#> 6       1     6 2025-04-26 18:07:07  2.4336111 1745656027  86.67846 -0.01138300
+head(mo2s, n = 3)
+#>   chamber cycle          Clock.TIME TIME.HOURS  TIME.UNIX      MO2       SLOPE
+#> 1       1     1 2025-04-26 16:02:07  0.3500000 1745648526 124.1892 -0.01630908
+#> 2       1     2 2025-04-26 16:27:07  0.7666667 1745650026 132.9017 -0.01745324
+#> 3       1     3 2025-04-26 16:52:07  1.1836111 1745651526 120.4722 -0.01582094
 #>   Intercept  Pearson.R       R.2 P      Std.Err Measurement.duration.seconds
 #> 1  96.79758 -0.9992922 0.9985849 0 1.774512e-05                         1199
 #> 2 100.40244 -0.9325148 0.8695838 0 1.953616e-04                         1199
 #> 3 100.81802 -0.9979925 0.9959890 0 2.900686e-05                         1200
-#> 4  99.59332 -0.9997433 0.9994866 0 8.451559e-06                         1200
-#> 5  98.68149 -0.9984348 0.9968720 0 1.828944e-05                         1200
-#> 6  98.08598 -0.9979846 0.9959732 0 2.091136e-05                         1200
 #>    avg.po2 median.po2 minimum.po2 max.po2 delta.po2 oxygen.solubility
 #> 1 87.01214    86.9360      77.252  96.350    19.098          8.062287
 #> 2 89.93050    89.8390       0.000 100.297   100.297          8.062287
 #> 3 91.31754    91.6375      81.106 100.020    18.914          8.062287
-#> 4 91.84268    91.8945      84.023  99.411    15.388          8.062287
-#> 5 91.89531    91.9490      84.533  98.627    14.094          8.062287
-#> 6 91.25049    90.9930      84.784  98.230    13.446          8.062287
-#>   ratio.vreal.fish total.experiment.duration.hours   minutes seconds       days
-#> 1         26.23577                       0.3500000  21.00000    1260 0.01458333
-#> 2         26.23577                       0.7666667  46.00000    2760 0.03194444
-#> 3         26.23577                       1.1836111  71.01667    4261 0.04931713
-#> 4         26.23577                       1.6002778  96.01667    5761 0.06667824
-#> 5         26.23577                       2.0169444 121.01667    7261 0.08403935
-#> 6         26.23577                       2.4336111 146.01667    8761 0.10140046
+#>   ratio.vreal.fish total.experiment.duration.hours  minutes seconds       days
+#> 1         26.23577                       0.3500000 21.00000    1260 0.01458333
+#> 2         26.23577                       0.7666667 46.00000    2760 0.03194444
+#> 3         26.23577                       1.1836111 71.01667    4261 0.04931713
 ```
 
 Correct MO₂ if a fish mass was entered incorrectly:
@@ -214,23 +187,26 @@ Read a single cycle file:
 
 ``` r
 cycle <- read_cycle(cycle_number = 9, path = exp_dir_path)
-head(cycle)
+head(cycle, n = 3)
 #>                  Time Seconds.from.start.for.linreg  Unix.Time ch1.po2 ch2.po2
 #> 1 1900-01-01 19:22:07                             1 1745659327  99.521 101.103
 #> 2 1900-01-01 19:22:08                             2 1745659328  99.349 101.169
 #> 3 1900-01-01 19:22:09                             3 1745659329  99.342 101.169
-#> 4 1900-01-01 19:22:10                             4 1745659330  99.342 101.020
-#> 5 1900-01-01 19:22:11                             5 1745659331  99.291 101.035
-#> 6 1900-01-01 19:22:12                             6 1745659332  99.352 101.035
 #>   ch3.po2 ch4.po2
 #> 1  96.265 107.683
 #> 2  96.213 107.731
 #> 3  96.213 107.731
-#> 4  96.184 107.663
-#> 5  96.169 107.663
-#> 6  96.169 107.709
 ```
 
+Plot PO_2 across a given cycle:
+
+``` r
+plot_cycle_po2(cycle_number = 9, path = exp_dir_path)
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+Alternatively, you can manipulate the cycle data and plot with ggplot.
 Convert to long format for plotting:
 
 ``` r
@@ -251,7 +227,7 @@ ggplot(cycle_long |> subset(po2 > 0),
   theme_cowplot(12)
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 ## MO₂ Trends Over Time
 
@@ -271,7 +247,7 @@ ggplot(mo2s,
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 Note that chamber 4 was the background respiration with the mass entered
 as an arbitrary 1 g, so it may make more sense to plot with it removed:
@@ -289,7 +265,7 @@ ggplot(mo2s |> subset(chamber != 4),
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
 
 ## Cycle Summary
 
@@ -352,20 +328,4 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
-
-## Next Steps
-
-- Explore `plot_cycle_po2()` for quick cycle plots.
-- Use `fix_exp_MO2s()` for correcting metadata errors.
-- Combine summaries for multi-experiment comparisons.
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-<img src="man/figures/README-pressure-1.png" width="100%" />
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
