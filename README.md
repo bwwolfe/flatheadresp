@@ -7,17 +7,31 @@
 <!-- badges: end -->
 
 The goal of flatheadresp is to streamline working with respirometry data
-that is produced from the AquaResp software (i.e., used in the TAF lab
-for flathead metabolic rate experiments), including importing AquaResp
-metadata and experimental data files into R, correcting mass-specific
-MO2 for post-experiment body mass measurements or other fixes, and
-calculating MO_2 from the linear regression slope of raw O2 data and
-correlation of O_2 ~ time. This allows calculating accurate coefficients
-of determination (R^2) to overcome the bug in the AquaResp v3.0 version
-where any missing O_2 values resulted in erroneous R^2 values for MO2
-measurements
+that is produced from the AquaResp software (i.e., used in the IMAS
+Taroona Aquaculture Facility lab for flathead metabolic rate
+experiments), including importing AquaResp metadata and experimental
+data files into R, correcting mass-specific MO2 for post-experiment body
+mass measurements or other fixes, and calculating MO_2 from the linear
+regression slope of raw O2 data and correlation of O_2 ~ time.
 
-## Installation
+AquaResp provide mass-specific oxygen consumption (MO_2) estimates for
+animals from oxygen concentration in each experimental chamber during
+the sealed measurement portion of each flush-wait-measure cycle. MO_2 is
+provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of
+fish bodyweight per hour). MO_2 are calculated from the slope of a
+regression line fit to (declining) oxygen concentration within the
+sealed chamber over time. Oxygen concentration is sampled from the probe
+in the experimental chamber every second. As is standard for
+respirometry work, MO_2 estimates are quality controlled with the
+coefficients of determination (R^2) calculated with Pearson’s
+correlation, with MO_2 values of R^2 \>= 0.95 considered precise enough.
+However, there is a bug in AquaResp where occasionally, an O_2
+concentration measurement is missed and recorded as a 0 instead of NA,
+and then this causes an erroneously low R^2 (and presumably a slightly
+low slope and MO_2 estimate as well). This allows calculating accurate
+R^2 to overcome the bug in the AquaResp v3.0 version where any missing
+O_2 values resulted in erroneous R^2 values for MO2 measurements. \##
+Installation
 
 You can install the development version of flatheadresp from
 [GitHub](https://github.com/) with:
@@ -53,8 +67,25 @@ documentation. Use `system.file()` to locate it:
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
 exp_dir_path
-#> [1] "C:/Users/bwolfe/AppData/Local/Temp/RtmpMP7Chr/temp_libpath83f05c11206/flatheadresp/extdata/aquaresp_experiment"
+#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath710437d16e3d/flatheadresp/extdata/aquaresp_experiment"
 ```
+
+The experiment directory is structured in the standard format used by
+AquaResp and this structure and file naming convention will be expected
+by the functions in this package:
+
+``` r
+list.files(exp_dir_path)
+#>  [1] "All slopes"                  "Experimental information"   
+#>  [3] "notes.txt"                   "Oxygen data raw"            
+#>  [5] "Summary data ABS resp 1.txt" "Summary data ABS resp 2.txt"
+#>  [7] "Summary data ABS resp 3.txt" "Summary data ABS resp 4.txt"
+#>  [9] "Summary data resp 1.txt"     "Summary data resp 2.txt"    
+#> [11] "Summary data resp 3.txt"     "Summary data resp 4.txt"
+```
+
+The good news is you only need to provide the experiment’s file path and
+the package’s functions will extract the needed files.
 
 ## Experimental Metadata and MO₂
 
@@ -84,7 +115,7 @@ get_exp_metadata(exp_dir_path)
 #> 4                      8.0623 2025-04-26 14:18:54
 ```
 
-Get AquaResp-calculated MO₂ for one chamber:
+Get AquaResp-calculated MO₂s for a given chamber:
 
 ``` r
 chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
@@ -210,7 +241,7 @@ cycle_long <- cycle %>%
                values_to = "po2")
 ```
 
-Plot PO₂ over time:
+Plot partial pressure of oxygen (PO₂) in the chambers during the cycle:
 
 ``` r
 ggplot(cycle_long |> subset(po2 > 0),
@@ -220,7 +251,7 @@ ggplot(cycle_long |> subset(po2 > 0),
   theme_cowplot(12)
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ## MO₂ Trends Over Time
 
@@ -240,7 +271,7 @@ ggplot(mo2s,
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 Note that chamber 4 was the background respiration with the mass entered
 as an arbitrary 1 g, so it may make more sense to plot with it removed:
@@ -258,7 +289,7 @@ ggplot(mo2s |> subset(chamber != 4),
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 ## Cycle Summary
 
@@ -321,7 +352,7 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 ## Next Steps
 

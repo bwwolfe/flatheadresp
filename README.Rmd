@@ -18,8 +18,9 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of flatheadresp is to streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the TAF lab for flathead metabolic rate experiments), including importing AquaResp metadata and experimental data files into R, correcting mass-specific MO2 for post-experiment body mass measurements or other fixes, and calculating MO_2 from the linear regression slope of raw O2 data and correlation of O_2 ~ time. This allows calculating accurate coefficients of determination (R^2) to overcome the bug in the AquaResp v3.0 version where any missing O_2 values resulted in erroneous R^2 values for MO2 measurements
+The goal of flatheadresp is to streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the IMAS Taroona Aquaculture Facility lab for flathead metabolic rate experiments), including importing AquaResp metadata and experimental data files into R, correcting mass-specific MO2 for post-experiment body mass measurements or other fixes, and calculating MO_2 from the linear regression slope of raw O2 data and correlation of O_2 ~ time.
 
+AquaResp provide mass-specific oxygen consumption (MO_2) estimates for animals from oxygen concentration in each experimental chamber during the sealed measurement portion of each flush-wait-measure cycle. MO_2 is provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of fish bodyweight per hour). MO_2 are calculated from the slope of a regression line fit to (declining) oxygen concentration within the sealed chamber over time. Oxygen concentration is sampled from the probe in the experimental chamber every second. As is standard for respirometry work, MO_2 estimates are quality controlled with the coefficients of determination (R^2) calculated with Pearson's correlation, with MO_2 values of  R^2 >= 0.95 considered precise enough. However, there is a bug in AquaResp where occasionally, an O_2 concentration measurement is missed and recorded as a 0 instead of NA, and then this causes an erroneously low R^2 (and presumably a slightly low slope and MO_2 estimate as well). This allows calculating accurate R^2 to overcome the bug in the AquaResp v3.0 version where any missing O_2 values resulted in erroneous R^2 values for MO2 measurements.
 ## Installation
 
 You can install the development version of flatheadresp from [GitHub](https://github.com/) with:
@@ -49,6 +50,14 @@ exp_dir_path <- system.file("extdata", "aquaresp_experiment",
 exp_dir_path
 ```
 
+The experiment directory is structured in the standard format used by AquaResp and this structure and file naming convention will be expected by the functions in this package:  
+
+```{r}
+list.files(exp_dir_path)
+```
+
+The good news is you only need to provide the experiment's file path and the package's functions will extract the needed files.  
+
 ## Experimental Metadata and MO₂
 
 Retrieve metadata for all chambers:
@@ -57,7 +66,7 @@ Retrieve metadata for all chambers:
 get_exp_metadata(exp_dir_path)
 ```
 
-Get AquaResp-calculated MO₂ for one chamber:
+Get AquaResp-calculated MO₂s for a given chamber:
 
 ```{r}
 chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
@@ -96,7 +105,7 @@ cycle_long <- cycle %>%
                values_to = "po2")
 ```
 
-Plot PO₂ over time:
+Plot partial pressure of oxygen (PO₂) in the chambers during the cycle:
 
 ```{r}
 ggplot(cycle_long |> subset(po2 > 0),
@@ -172,6 +181,7 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   scale_x_continuous(breaks = 1:max(cyc_po2_long$cycle)) +
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
 ```
+
 
 ## Next Steps
 
