@@ -161,7 +161,7 @@ Summarize PO₂ ranges and correlations:
 
 ```{r}
 cyc_summary <- get_exp_cycle_summary(exp_dir_path)
-head(cyc_summary)
+head(cyc_summary, n = 3)
 ```
 
 Plot PO₂ min/max per cycle:

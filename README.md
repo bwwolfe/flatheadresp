@@ -67,7 +67,7 @@ documentation. Use `system.file()` to locate it:
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
 exp_dir_path
-#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath71045a2e7b6a/flatheadresp/extdata/aquaresp_experiment"
+#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath71041daf5f0f/flatheadresp/extdata/aquaresp_experiment"
 ```
 
 The experiment directory is structured in the standard format used by
@@ -273,35 +273,23 @@ Summarize PO₂ ranges and correlations:
 
 ``` r
 cyc_summary <- get_exp_cycle_summary(exp_dir_path)
-head(cyc_summary)
+head(cyc_summary, n = 3)
 #>   ch1.po2.min ch1.po2.max ch2.po2.min ch2.po2.max ch3.po2.min ch3.po2.max
 #> 1      77.252      96.350      95.181     101.435      99.780     100.747
 #> 2      79.793     100.297      95.840     103.549      98.824      99.369
 #> 3      81.106     100.020      94.807     102.842      98.279      98.649
-#> 4      84.023      99.411      94.276     102.205      97.145      98.120
-#> 5      84.533      98.627      93.605     100.770    -300.000      97.134
-#> 6      84.784      98.230      93.540     100.267      82.384      95.269
 #>   ch4.po2.min ch4.po2.max ch1.po2.r2.cor ch2.po2.r2.cor ch3.po2.r2.cor
 #> 1     108.902     112.238     -0.9992926     -0.9956057    -0.93376771
 #> 2     112.512     113.433     -0.9994578     -0.9988078    -0.66357237
 #> 3     112.880     113.417     -0.9979935     -0.9991333    -0.05008843
-#> 4     112.111     113.039     -0.9997434     -0.9985394    -0.96263344
-#> 5     110.472     112.017     -0.9984351     -0.9982961    -0.06137785
-#> 6     108.975     110.205     -0.9979847     -0.9988777    -0.99367123
 #>   ch4.po2.r2.cor ch1.po2.r2.pval ch2.po2.r2.pval ch3.po2.r2.pval
 #> 1      0.9910560               0               0         0.00000
 #> 2      0.9355629               0               0         0.00000
 #> 3     -0.8535382               0               0         0.08285
-#> 4     -0.9391888               0               0         0.00000
-#> 5     -0.9904263               0               0         0.03350
-#> 6     -0.9856225               0               0         0.00000
 #>   ch4.po2.r2.pval ch1.po2.pct0 ch2.po2.pct0 ch3.po2.pct0 ch4.po2.pct0
 #> 1               0         0.00         0.00         0.00         0.00
 #> 2               0         0.08         0.08         0.08         0.08
 #> 3               0         0.00         0.00         0.00         0.00
-#> 4               0         0.00         0.00         0.00         0.00
-#> 5               0         0.00         0.00         0.00         0.00
-#> 6               0         0.00         0.00         0.00         0.00
 ```
 
 Plot PO₂ min/max per cycle:
