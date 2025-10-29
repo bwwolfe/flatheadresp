@@ -67,7 +67,7 @@ documentation. Use `system.file()` to locate it:
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
 exp_dir_path
-#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath71043dec44e4/flatheadresp/extdata/aquaresp_experiment"
+#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath71045a2e7b6a/flatheadresp/extdata/aquaresp_experiment"
 ```
 
 The experiment directory is structured in the standard format used by
@@ -206,7 +206,7 @@ plot_cycle_po2(cycle_number = 9, path = exp_dir_path)
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
-Alternatively, you can manipulate the cycle data and plot with ggplot.
+Alternatively, you can manipulate the cycle data and plot with ggplot2.
 Convert to long format for plotting:
 
 ``` r
