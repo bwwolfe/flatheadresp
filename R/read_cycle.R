@@ -16,25 +16,28 @@
 #'                             package = "flatheadresp")
 #' # Read cycle 1 from the example experiment
 #' read_cycle(cycle_number = 1, path = exp_dir_path)
-read_cycle <-
-  function(cycle_number, path) {
-    res <-
-      utils::read.table(file.path(path,
-                                  "All slopes",
-                                  paste0("Cycle_", cycle_number, ".txt")),
-                        sep = ";",
-                        header = TRUE)
-    if ("X" %in% names(res) &&
-        all(is.na(res$X)))
-      res <- res[, setdiff(names(res), "X"), drop = FALSE]
 
-    return(res)
+read_cycle <- function(cycle_number, path) {
+  file_path <-
+    file.path(path, "All slopes", paste0("Cycle_", cycle_number, ".txt"))
+
+  if (!file.exists(file_path)) {
+    warning(paste("Cycle file", file_path, "not found. Returning NULL."))
+    return(NULL)
   }
+
+  res <- utils::read.table(file_path, sep = ";", header = TRUE)
+
+  if ("X" %in% names(res) && all(is.na(res$X))) {
+    res <- res[, setdiff(names(res), "X"), drop = FALSE]
+  }
+
+  return(res)
+}
 
 #' Calculate MO2 values for a specific AquaResp cycle
 #'
-#' Calculates mass-specific oxygen consumption (MO₂) for each chamber in a given cycle
-#' using linear regression on PO₂ data and experimental metadata.
+#' Calculates mass-specific oxygen consumption (MO₂) for each chamber in a given cycle using linear regression on PO₂ data and experimental metadata.
 #'
 #' @param cycle_number Numeric. The cycle number to calculate MO₂ for.
 #' @param path Character. The path to the AquaResp experiment directory.
@@ -47,46 +50,42 @@ read_cycle <-
 #' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
 #'                             package = "flatheadresp")
 #' calc_cycle_mo2s(cycle_number = 1, path = exp_dir_path)
-calc_cycle_mo2s <-
-  function(cycle_number, path) {
+calc_cycle_mo2s <- function(cycle_number, path) {
+  chambers <- get_chambers(path)
+  cycle <- read_cycle(cycle_number, path)
 
-    chambers <- get_chambers(path)
-
-    cycle <- read_cycle(cycle_number, path)
-
-    po2_cols <-
-      grep("po2", names(cycle))
-
-    cycle_time_x <- cycle$Unix.Time - min(cycle$Unix.Time) + 1
-
-    cycle_slope_list <-
-      lapply(po2_cols, function(i) {
-        slope_vec <-
-          stats::lm(cycle[[i]] ~ cycle_time_x) |>
-          summary() |>
-          (\(x)x$coefficients[2,])()
-        return(slope_vec)
-      }
-      )
-
-    meta <- get_exp_metadata(path)
-
-    beta <- meta$`Oxygen.solubilty..mg.O2...L`
-    if (length(unique(beta)) > 1) {
-      stop("currently not coded to allow different 02 sol across chambers")
-    } else beta <- beta[1]
-
-    rRespFish <-
-      meta$`Real.volume..vresp...vfish...neutrally.bouyant...L` /
-      meta$`Mass.of.fish..kg`
-
-    sapply(chambers, \(i){
-      slope <- cycle_slope_list[[i]][1]
-      MO2 <- -1 * (slope / 100) * beta[1] * rRespFish[i] * 3600.0
-      return(MO2)
-    }) |> stats::setNames(chambers)
+  if (is.null(cycle)) {
+    warning(paste("Cycle", cycle_number, "data is missing. Returning NA for all chambers."))
+    return(setNames(rep(NA_real_, length(chambers)), chambers))
   }
 
+  po2_cols <- grep("po2", names(cycle))
+  cycle_time_x <- cycle$Unix.Time - min(cycle$Unix.Time) + 1
+
+  cycle_slope_list <- lapply(po2_cols, function(i) {
+    slope_vec <- stats::lm(cycle[[i]] ~ cycle_time_x) |>
+      summary() |>
+      (\(x) x$coefficients[2, ])()
+    return(slope_vec)
+  })
+
+  meta <- get_exp_metadata(path)
+  beta <- meta$`Oxygen.solubilty..mg.O2...L`
+  if (length(unique(beta)) > 1) {
+    stop("Currently not coded to allow different O₂ solubility across chambers.")
+  } else {
+    beta <- beta[1]
+  }
+
+  rRespFish <- meta$`Real.volume..vresp...vfish...neutrally.bouyant...L` /
+    meta$`Mass.of.fish..kg`
+
+  sapply(chambers, \(i) {
+    slope <- cycle_slope_list[[i]][1]
+    MO2 <- -1 * (slope / 100) * beta * rRespFish[i] * 3600.0
+    return(MO2)
+  }) |> stats::setNames(chambers)
+}
 
 #' Get min and max PO2 values for each chamber in a cycle
 #'
