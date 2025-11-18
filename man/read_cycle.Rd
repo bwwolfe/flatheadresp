@@ -15,7 +15,7 @@ read_cycle(cycle_number, path)
 A dataframe containing the data from the specified cycle.
 }
 \description{
-AquaResp stores each experimental cycle (i.e., the measurement period when MO₂ is calculated)
+AquaResp stores each experimental cycle (i.e., the measurement period when \eqn{MO_{2}} is calculated)
 as a separate file. This function reads the data from a cycle file in the "All slopes" folder
 of an AquaResp experiment.
 }

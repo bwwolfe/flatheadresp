@@ -10,28 +10,31 @@ The goal of flatheadresp is to streamline working with respirometry data
 that is produced from the AquaResp software (i.e., used in the IMAS
 Taroona Aquaculture Facility lab for flathead metabolic rate
 experiments), including importing AquaResp metadata and experimental
-data files into R, correcting mass-specific MO2 for post-experiment body
-mass measurements or other fixes, and calculating MO_2 from the linear
-regression slope of raw O2 data and correlation of O_2 ~ time.
+data files into R, correcting mass-specific $\dot M O_2$ for
+post-experiment body mass measurements or other fixes, and calculating
+$\dot M O_2$ from the linear regression slope of raw O2 data and
+correlation of O<sub>2</sub> ~ time.
 
-AquaResp provide mass-specific oxygen consumption (MO_2) estimates for
-animals from oxygen concentration in each experimental chamber during
-the sealed measurement portion of each flush-wait-measure cycle. MO_2 is
-provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of
-fish bodyweight per hour). MO_2 are calculated from the slope of a
-regression line fit to (declining) oxygen concentration within the
-sealed chamber over time. Oxygen concentration is sampled from the probe
-in the experimental chamber every second. As is standard for
-respirometry work, MO_2 estimates are quality controlled with the
-coefficients of determination (R^2) calculated with Pearson’s
-correlation, with MO_2 values of R^2 \>= 0.95 considered precise enough.
-However, there is a bug in AquaResp where occasionally, an O_2
-concentration measurement is missed and recorded as a 0 instead of NA,
-and then this causes an erroneously low R^2 (and presumably a slightly
-low slope and MO_2 estimate as well). This allows calculating accurate
-R^2 to overcome the bug in the AquaResp v3.0 version where any missing
-O_2 values resulted in erroneous R^2 values for MO2 measurements. \##
-Installation
+AquaResp provide mass-specific oxygen consumption ($\dot M O_2$)
+estimates for animals from oxygen concentration in each experimental
+chamber during the sealed measurement portion of each flush-wait-measure
+cycle. $\dot M O_2$ is provided in units of mg O₂/kg/hr (milligrams of
+oxygen per kilogram of fish bodyweight per hour). $\dot M O_2$ are
+calculated from the slope of a regression line fit to (declining) oxygen
+concentration within the sealed chamber over time. Oxygen concentration
+is sampled from the probe in the experimental chamber every second. As
+is standard for respirometry work, $\dot M O_2$ estimates are quality
+controlled with the coefficients of determination ($R^2$) calculated
+with Pearson’s correlation, with $\dot M O_2$ values of $R^2 \geq 0.95$
+considered precise enough. However, there is a bug in AquaResp where
+occasionally, an O<sub>2</sub> concentration measurement is missed and
+recorded as a 0 instead of NA, and then this causes an erroneously low
+$R^2$ (and presumably a slightly low slope and $\dot M O_2$ estimate as
+well). This allows calculating accurate $R^2$ to overcome the bug in the
+AquaResp v3.0 version where any missing O<sub>2</sub> values resulted in
+erroneous $R^2$ values for MO2 measurements.
+
+## Installation
 
 You can install the development version of flatheadresp from
 [GitHub](https://github.com/) with:
@@ -64,10 +67,10 @@ The package ships an example AquaResp experiment under
 documentation. Use `system.file()` to locate it:
 
 ``` r
-exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+exp_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
-exp_dir_path
-#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpawqogq/temp_libpath71041daf5f0f/flatheadresp/extdata/aquaresp_experiment"
+exp_path
+#> [1] "C:/Users/bwolfe/AppData/Local/Temp/Rtmpqynwv1/temp_libpath4ed46db75e40/flatheadresp/extdata/aquaresp_experiment"
 ```
 
 The experiment directory is structured in the standard format used by
@@ -75,7 +78,7 @@ AquaResp and this structure and file naming convention will be expected
 by the functions in this package:
 
 ``` r
-list.files(exp_dir_path)
+list.files(exp_path)
 #>  [1] "All slopes"                  "Experimental information"   
 #>  [3] "notes.txt"                   "Oxygen data raw"            
 #>  [5] "Summary data ABS resp 1.txt" "Summary data ABS resp 2.txt"
@@ -89,10 +92,38 @@ the package’s functions will extract the needed files.
 
 ## Experimental Metadata and MO₂
 
+A good starting point is the function `summarise_experiment()`, which
+will provide an easy to read summary of the experiment in a particular
+directory in the R console:
+
+``` r
+summarise_experiment(exp_path)
+#> Experiment started 2025-04-26 14:18:54 
+#> 
+#> 4 chambers
+#> 
+#> Mass of fish by chamber:
+#>   Chamber 1 : 0.123 kg
+#>   Chamber 2 : 0.058 kg
+#>   Chamber 3 : 0.127 kg
+#>   Chamber 4 : 0.001 kg
+#> 
+#> Respirometer volume is 3.35 L for all chambers.
+#> 
+#> Cycle timing:
+#>   Flush time: 240 seconds
+#>   Wait time: 60 seconds
+#>   Measurement time: 1200 seconds
+#> 
+#> Environmental conditions:
+#>   Salinity: 35.5 ppt
+#>   Temperature: 15.6 °C
+```
+
 Retrieve metadata for all chambers:
 
 ``` r
-get_exp_metadata(exp_dir_path)
+get_exp_metadata(exp_path)
 #>   chamber Experiment.start..UNIX.time Flush.time..s Wait.time..s
 #> 1       1                  1745641134           240           60
 #> 2       2                  1745641134           240           60
@@ -118,7 +149,7 @@ get_exp_metadata(exp_dir_path)
 Get AquaResp-calculated MO₂s for a given chamber:
 
 ``` r
-chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
+chamber2_mo2s <- get_exp_MO2s(exp_path, chamber = 2)
 head(chamber2_mo2s, n = 3)
 #>   chamber cycle          Clock.TIME TIME.HOURS  TIME.UNIX       MO2
 #> 1       2     1 2025-04-26 16:02:07  0.3502778 1745648526  88.72929
@@ -145,7 +176,7 @@ head(chamber2_mo2s, n = 3)
 Or for all chambers:
 
 ``` r
-mo2s <- get_exp_MO2s(exp_dir_path)
+mo2s <- get_exp_MO2s(exp_path)
 head(mo2s, n = 3)
 #>   chamber cycle          Clock.TIME TIME.HOURS  TIME.UNIX      MO2       SLOPE
 #> 1       1     1 2025-04-26 16:02:07  0.3500000 1745648526 124.1892 -0.01630908
@@ -168,7 +199,7 @@ head(mo2s, n = 3)
 Correct MO₂ if a fish mass was entered incorrectly:
 
 ``` r
-fix_exp_MO2s(exp_dir_path, chamber = 1, new_mass = 0.200)
+fix_exp_MO2s(exp_path, chamber = 1, new_mass = 0.200)
 #> 
 #>   fish mass: 0.123 -> 0.2
 #>   resp real volume: 3.227 -> 3.15
@@ -186,7 +217,7 @@ fix_exp_MO2s(exp_dir_path, chamber = 1, new_mass = 0.200)
 Read a single cycle file:
 
 ``` r
-cycle <- read_cycle(cycle_number = 9, path = exp_dir_path)
+cycle <- read_cycle(cycle_number = 9, path = exp_path)
 head(cycle, n = 3)
 #>                  Time Seconds.from.start.for.linreg  Unix.Time ch1.po2 ch2.po2
 #> 1 1900-01-01 19:22:07                             1 1745659327  99.521 101.103
@@ -198,13 +229,13 @@ head(cycle, n = 3)
 #> 3  96.213 107.731
 ```
 
-Plot PO_2 across a given cycle:
+Plot PO<sub>2</sub> across a given cycle:
 
 ``` r
-plot_cycle_po2(cycle_number = 9, path = exp_dir_path)
+plot_cycle_po2(cycle_number = 9, path = exp_path)
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 Alternatively, you can manipulate the cycle data and plot with ggplot2.
 Convert to long format for plotting:
@@ -227,7 +258,7 @@ ggplot(cycle_long |> subset(po2 > 0),
   theme_cowplot(12)
 ```
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 ## MO₂ Trends Over Time
 
@@ -247,7 +278,7 @@ ggplot(mo2s,
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
 
 Note that chamber 4 was the background respiration with the mass entered
 as an arbitrary 1 g, so it may make more sense to plot with it removed:
@@ -265,31 +296,27 @@ ggplot(mo2s |> subset(chamber != 4),
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 ## Cycle Summary
 
 Summarize PO₂ ranges and correlations:
 
 ``` r
-cyc_summary <- get_exp_cycle_summary(exp_dir_path)
+cyc_summary <- get_exp_cycle_summary(exp_path)
 head(cyc_summary, n = 3)
 #>   ch1.po2.min ch1.po2.max ch2.po2.min ch2.po2.max ch3.po2.min ch3.po2.max
 #> 1      77.252      96.350      95.181     101.435      99.780     100.747
 #> 2      79.793     100.297      95.840     103.549      98.824      99.369
 #> 3      81.106     100.020      94.807     102.842      98.279      98.649
-#>   ch4.po2.min ch4.po2.max ch1.po2.r2.cor ch2.po2.r2.cor ch3.po2.r2.cor
-#> 1     108.902     112.238     -0.9992926     -0.9956057    -0.93376771
-#> 2     112.512     113.433     -0.9994578     -0.9988078    -0.66357237
-#> 3     112.880     113.417     -0.9979935     -0.9991333    -0.05008843
-#>   ch4.po2.r2.cor ch1.po2.r2.pval ch2.po2.r2.pval ch3.po2.r2.pval
-#> 1      0.9910560               0               0         0.00000
-#> 2      0.9355629               0               0         0.00000
-#> 3     -0.8535382               0               0         0.08285
-#>   ch4.po2.r2.pval ch1.po2.pct0 ch2.po2.pct0 ch3.po2.pct0 ch4.po2.pct0
-#> 1               0         0.00         0.00         0.00         0.00
-#> 2               0         0.08         0.08         0.08         0.08
-#> 3               0         0.00         0.00         0.00         0.00
+#>   ch4.po2.min ch4.po2.max    ch1.r2    ch2.r2      ch3.r2    ch4.r2 ch1.p ch2.p
+#> 1     108.902     112.238 0.9985857 0.9912306 0.871922134 0.9821921     0     0
+#> 2     112.512     113.433 0.9989159 0.9976171 0.440328296 0.8752779     0     0
+#> 3     112.880     113.417 0.9959911 0.9982673 0.002508851 0.7285274     0     0
+#>           ch3.p ch4.p ch1.pct0 ch2.pct0 ch3.pct0 ch4.pct0
+#> 1  0.000000e+00     0     0.00     0.00     0.00     0.00
+#> 2 6.379390e-153     0     0.08     0.08     0.08     0.08
+#> 3  8.284811e-02     0     0.00     0.00     0.00     0.00
 ```
 
 Plot PO₂ min/max per cycle:
@@ -316,4 +343,4 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
 ```
 
-<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />

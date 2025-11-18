@@ -7,16 +7,15 @@
 calc_cycle_mo2s(cycle_number, path)
 }
 \arguments{
-\item{cycle_number}{Numeric. The cycle number to calculate MO₂ for.}
+\item{cycle_number}{Numeric. The cycle number to calculate \eqn{MO_{2}} for.}
 
 \item{path}{Character. The path to the AquaResp experiment directory.}
 }
 \value{
-A named numeric vector of MO₂ values for each chamber.
+A named numeric vector of \eqn{MO_{2}} values for each chamber.
 }
 \description{
-Calculates mass-specific oxygen consumption (MO₂) for each chamber in a given cycle
-using linear regression on PO₂ data and experimental metadata.
+Calculates mass-specific oxygen consumption (\eqn{MO_{2}}) for each chamber in a given cycle using linear regression on \eqn{PO_{2}} data and experimental metadata.
 }
 \examples{
 # Example data directory shipped with the package

@@ -2,20 +2,20 @@
 % Please edit documentation in R/get_chambers.R
 \name{get_exp_MO2s}
 \alias{get_exp_MO2s}
-\title{Get MO2 values from an AquaResp experiment}
+\title{Get \eqn{MO_{2}} values from an AquaResp experiment}
 \usage{
 get_exp_MO2s(path, chamber = NULL)
 }
 \arguments{
 \item{path}{Character. The directory location of the AquaResp experiment on disk.}
 
-\item{chamber}{Optional numeric. The chamber number(s) to retrieve MO2 values for. If omitted, all chambers are returned.}
+\item{chamber}{Optional numeric. The chamber number(s) to retrieve \eqn{MO_{2}} values for. If omitted, all chambers are returned.}
 }
 \value{
-A dataframe with columns for chamber number, cycle number, and MO2 values.
+A dataframe with columns for chamber number, cycle number, and \eqn{MO_{2}} values.
 }
 \description{
-This function reads the summary data files and returns mass-specific oxygen consumption (MO2)
+This function reads the summary data files and returns mass-specific oxygen consumption (\eqn{MO_{2}})
 values for one or more chambers. If no chamber is specified, data from all chambers is returned.
 }
 \examples{

@@ -50,42 +50,43 @@ read_cycle <- function(cycle_number, path) {
 #' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
 #'                             package = "flatheadresp")
 #' calc_cycle_mo2s(cycle_number = 1, path = exp_dir_path)
-calc_cycle_mo2s <- function(cycle_number, path) {
-  chambers <- get_chambers(path)
-  cycle <- read_cycle(cycle_number, path)
+calc_cycle_mo2s <-
+  function(cycle_number, path) {
 
-  if (is.null(cycle)) {
-    warning(paste("Cycle", cycle_number, "data is missing. Returning NA for all chambers."))
-    return(setNames(rep(NA_real_, length(chambers)), chambers))
+    chambers <- get_chambers(path)
+
+    cycle <- read_cycle(cycle_number, path)
+
+    po2_cols <-
+      grep("po2", names(cycle))
+
+    cycle_time_x <- cycle$Unix.Time - min(cycle$Unix.Time) + 1
+
+    cycle_slope_list <-
+      lapply(po2_cols, function(i) {
+        slope_vec <-
+          stats::lm(cycle[[i]] ~ cycle_time_x) |>
+          summary() |>
+          (\(x)x$coefficients[2,])()
+        return(slope_vec)
+      }
+      )
+
+    meta <- get_exp_metadata(path)
+
+    beta <- meta$`Oxygen.solubilty..mg.O2...L`
+
+    rRespFish <-
+      meta$`Real.volume..vresp...vfish...neutrally.bouyant...L` /
+      meta$`Mass.of.fish..kg`
+
+    sapply(chambers, \(i){
+      slope <- cycle_slope_list[[i]][1]
+      MO2 <- -1 * (slope / 100) * beta[i] * rRespFish[i] * 3600.0
+      return(MO2)
+    }) |> stats::setNames(chambers)
   }
 
-  po2_cols <- grep("po2", names(cycle))
-  cycle_time_x <- cycle$Unix.Time - min(cycle$Unix.Time) + 1
-
-  cycle_slope_list <- lapply(po2_cols, function(i) {
-    slope_vec <- stats::lm(cycle[[i]] ~ cycle_time_x) |>
-      summary() |>
-      (\(x) x$coefficients[2, ])()
-    return(slope_vec)
-  })
-
-  meta <- get_exp_metadata(path)
-  beta <- meta$`Oxygen.solubilty..mg.O2...L`
-  if (length(unique(beta)) > 1) {
-    stop("Currently not coded to allow different O₂ solubility across chambers.")
-  } else {
-    beta <- beta[1]
-  }
-
-  rRespFish <- meta$`Real.volume..vresp...vfish...neutrally.bouyant...L` /
-    meta$`Mass.of.fish..kg`
-
-  sapply(chambers, \(i) {
-    slope <- cycle_slope_list[[i]][1]
-    MO2 <- -1 * (slope / 100) * beta * rRespFish[i] * 3600.0
-    return(MO2)
-  }) |> stats::setNames(chambers)
-}
 
 #' Get min and max PO2 values for each chamber in a cycle
 #'
@@ -140,7 +141,7 @@ get_cycle_missingness <-
 
 #' Calculate correlation between PO2 and time for each chamber
 #'
-#' Performs Pearson correlation tests between PO₂ values and Unix time for each chamber in a cycle.
+#' Performs Pearson correlation (r) tests between PO₂ values and Unix time for each chamber in a cycle, retyrns r ^ 2
 #'
 #' @param cycle Dataframe. A cycle dataframe as returned by `read_cycle()`.
 #'
@@ -151,8 +152,8 @@ get_cycle_missingness <-
 #' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
 #'                             package = "flatheadresp")
 #' cycle <- read_cycle(1, exp_dir_path)
-#' get_cycle_correlations(cycle)
-get_cycle_correlations <-
+#' get_cycle_R2s(cycle)
+get_cycle_R2s <-
   function(cycle) {
     po2_cols <-
       grep("po2", names(cycle))
@@ -168,14 +169,9 @@ get_cycle_correlations <-
       }, secs = cycle$Unix.Time)
 
     r2s <- lapply(cors, function(x)
-      x$estimate) |>
+      x$estimate^2) |> #returns r ^ 2
       stats::setNames(paste0(names(cycle[po2_cols]), ".r2"))
-
-    r2_pvals <- lapply(cors, function(x)
-      round(x$p.value, 5)) |>
-      stats::setNames(paste0(names(cycle[po2_cols]), ".r2.pval"))
-
-    unlist(c(r2s, r2_pvals))
+    return(r2s)
   }
 
 
@@ -206,7 +202,7 @@ get_exp_cycle_summary <- function(path){
     cycle_summary <-
       c(
         get_cycle_min_max(cycle),
-        get_cycle_correlations(cycle),
+        get_cycle_R2s(cycle),
         unlist(get_cycle_missingness(cycle))
       )
 

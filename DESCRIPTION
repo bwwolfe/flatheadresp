@@ -16,4 +16,6 @@ BugReports: https://github.com/bwwolfe/flatheadresp/issues
 Imports: 
     graphics,
     stats,
-    utils
+    utils,
+    dplyr,
+    tidyr

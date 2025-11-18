@@ -16,12 +16,14 @@ knitr::opts_chunk$set(
 # flatheadresp
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-The goal of flatheadresp is to streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the IMAS Taroona Aquaculture Facility lab for flathead metabolic rate experiments), including importing AquaResp metadata and experimental data files into R, correcting mass-specific MO2 for post-experiment body mass measurements or other fixes, and calculating MO_2 from the linear regression slope of raw O2 data and correlation of O_2 ~ time.
+The goal of flatheadresp is to streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the IMAS Taroona Aquaculture Facility lab for flathead metabolic rate experiments), including importing AquaResp metadata and experimental data files into R, correcting mass-specific $\dot M O_2$ for post-experiment body mass measurements or other fixes, and calculating $\dot M O_2$ from the linear regression slope of raw O2 data and correlation of O~2~ \~ time.
 
-AquaResp provide mass-specific oxygen consumption (MO_2) estimates for animals from oxygen concentration in each experimental chamber during the sealed measurement portion of each flush-wait-measure cycle. MO_2 is provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of fish bodyweight per hour). MO_2 are calculated from the slope of a regression line fit to (declining) oxygen concentration within the sealed chamber over time. Oxygen concentration is sampled from the probe in the experimental chamber every second. As is standard for respirometry work, MO_2 estimates are quality controlled with the coefficients of determination (R^2) calculated with Pearson's correlation, with MO_2 values of  R^2 >= 0.95 considered precise enough. However, there is a bug in AquaResp where occasionally, an O_2 concentration measurement is missed and recorded as a 0 instead of NA, and then this causes an erroneously low R^2 (and presumably a slightly low slope and MO_2 estimate as well). This allows calculating accurate R^2 to overcome the bug in the AquaResp v3.0 version where any missing O_2 values resulted in erroneous R^2 values for MO2 measurements.
-## Installation
+AquaResp provide mass-specific oxygen consumption ($\dot M O_2$) estimates for animals from oxygen concentration in each experimental chamber during the sealed measurement portion of each flush-wait-measure cycle. $\dot M O_2$ is provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of fish bodyweight per hour). $\dot M O_2$ are calculated from the slope of a regression line fit to (declining) oxygen concentration within the sealed chamber over time. Oxygen concentration is sampled from the probe in the experimental chamber every second. As is standard for respirometry work, $\dot M O_2$ estimates are quality controlled with the coefficients of determination ($R^2$) calculated with Pearson's correlation, with $\dot M O_2$ values of $R^2 \geq 0.95$ considered precise enough. However, there is a bug in AquaResp where occasionally, an O~2~ concentration measurement is missed and recorded as a 0 instead of NA, and then this causes an erroneously low $R^2$ (and presumably a slightly low slope and $\dot M O_2$ estimate as well). This allows calculating accurate $R^2$ to overcome the bug in the AquaResp v3.0 version where any missing O~2~ values resulted in erroneous $R^2$ values for MO2 measurements.
+
+## Installation  
 
 You can install the development version of flatheadresp from [GitHub](https://github.com/) with:
 
@@ -45,45 +47,52 @@ library(ggthemes)
 The package ships an example AquaResp experiment under `inst/extdata/aquaresp_experiment` that is used in the examples in the documentation. Use `system.file()` to locate it:
 
 ```{r}
-exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+exp_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
-exp_dir_path
+exp_path
 ```
 
-The experiment directory is structured in the standard format used by AquaResp and this structure and file naming convention will be expected by the functions in this package:  
+The experiment directory is structured in the standard format used by AquaResp and this structure and file naming convention will be expected by the functions in this package:
 
 ```{r}
-list.files(exp_dir_path)
+list.files(exp_path)
 ```
 
-The good news is you only need to provide the experiment's file path and the package's functions will extract the needed files.  
+The good news is you only need to provide the experiment's file path and the package's functions will extract the needed files.
 
 ## Experimental Metadata and MO₂
+
+A good starting point is the function `summarise_experiment()`, which will provide an easy to read summary of the experiment in a particular directory in the R console:
+
+```{r}
+summarise_experiment(exp_path)
+```
+
 
 Retrieve metadata for all chambers:
 
 ```{r}
-get_exp_metadata(exp_dir_path)
+get_exp_metadata(exp_path)
 ```
 
 Get AquaResp-calculated MO₂s for a given chamber:
 
 ```{r}
-chamber2_mo2s <- get_exp_MO2s(exp_dir_path, chamber = 2)
+chamber2_mo2s <- get_exp_MO2s(exp_path, chamber = 2)
 head(chamber2_mo2s, n = 3)
 ```
 
 Or for all chambers:
 
 ```{r}
-mo2s <- get_exp_MO2s(exp_dir_path)
+mo2s <- get_exp_MO2s(exp_path)
 head(mo2s, n = 3)
 ```
 
 Correct MO₂ if a fish mass was entered incorrectly:
 
 ```{r}
-fix_exp_MO2s(exp_dir_path, chamber = 1, new_mass = 0.200)
+fix_exp_MO2s(exp_path, chamber = 1, new_mass = 0.200)
 ```
 
 ## Cycle-Level Data
@@ -91,17 +100,17 @@ fix_exp_MO2s(exp_dir_path, chamber = 1, new_mass = 0.200)
 Read a single cycle file:
 
 ```{r}
-cycle <- read_cycle(cycle_number = 9, path = exp_dir_path)
+cycle <- read_cycle(cycle_number = 9, path = exp_path)
 head(cycle, n = 3)
 ```
 
-Plot PO_2 across a given cycle:
+Plot PO~2~ across a given cycle:
 
 ```{r}
-plot_cycle_po2(cycle_number = 9, path = exp_dir_path)
+plot_cycle_po2(cycle_number = 9, path = exp_path)
 ```
 
-Alternatively, you can manipulate the cycle data and plot with ggplot2. Convert to long format for plotting:  
+Alternatively, you can manipulate the cycle data and plot with ggplot2. Convert to long format for plotting:
 
 ```{r}
 cycle_long <- cycle %>%
@@ -154,13 +163,12 @@ ggplot(mo2s |> subset(chamber != 4),
   scale_y_continuous("Mass-specific MO₂")
 ```
 
-
 ## Cycle Summary
 
 Summarize PO₂ ranges and correlations:
 
 ```{r}
-cyc_summary <- get_exp_cycle_summary(exp_dir_path)
+cyc_summary <- get_exp_cycle_summary(exp_path)
 head(cyc_summary, n = 3)
 ```
 
@@ -187,4 +195,3 @@ ggplot(cyc_po2_long |> subset(chamber != "000"),
   scale_x_continuous(breaks = 1:max(cyc_po2_long$cycle)) +
   scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
 ```
-

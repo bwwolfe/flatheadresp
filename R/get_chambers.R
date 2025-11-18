@@ -94,16 +94,15 @@ get_exp_metadata <- function(path) {
   do.call(rbind, lapply(metadata_list, as.data.frame))
 }
 
-
-#' Get MO2 values from an AquaResp experiment
+#' Get \eqn{MO_{2}} values from an AquaResp experiment
 #'
-#' This function reads the summary data files and returns mass-specific oxygen consumption (MO2)
+#' This function reads the summary data files and returns mass-specific oxygen consumption (\eqn{MO_{2}})
 #' values for one or more chambers. If no chamber is specified, data from all chambers is returned.
 #'
 #' @param path Character. The directory location of the AquaResp experiment on disk.
-#' @param chamber Optional numeric. The chamber number(s) to retrieve MO2 values for. If omitted, all chambers are returned.
+#' @param chamber Optional numeric. The chamber number(s) to retrieve \eqn{MO_{2}} values for. If omitted, all chambers are returned.
 #'
-#' @return A dataframe with columns for chamber number, cycle number, and MO2 values.
+#' @return A dataframe with columns for chamber number, cycle number, and \eqn{MO_{2}} values.
 #' @export
 #'
 #' @examples

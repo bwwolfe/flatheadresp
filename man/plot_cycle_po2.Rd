@@ -4,18 +4,20 @@
 \alias{plot_cycle_po2}
 \title{Plot PO2 values for a specific cycle}
 \usage{
-plot_cycle_po2(cycle_number, path)
+plot_cycle_po2(cycle_number, path, ylim = NULL)
 }
 \arguments{
 \item{cycle_number}{Numeric. The cycle number to plot.}
 
 \item{path}{Character. The path to the AquaResp experiment directory.}
+
+\item{ylim}{Numeric vector. The y axis plot limits, if NULL (default) it will be the range of po2 values across the cycle. May need to change to c(0, 100) or e.g. c(80,100) to zoom enough to see if there were any 0s or missing data (-300) during the cycle.}
 }
 \value{
-A base-R plot of time vs PO₂.
+A base-R plot of time vs \eqn{PO_{2}}.
 }
 \description{
-Generates a scatter plot of PO₂ values over time for each chamber in a given cycle.
+Generates a scatter plot of \eqn{PO_{2}} values over time for each chamber in a given cycle.
 }
 \examples{
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",
