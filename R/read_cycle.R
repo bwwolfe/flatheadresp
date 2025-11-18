@@ -1,6 +1,6 @@
 #' Read a single AquaResp cycle file
 #'
-#' AquaResp stores each experimental cycle (i.e., the measurement period when MO₂ is calculated)
+#' AquaResp stores each experimental cycle (i.e., the measurement period when \eqn{MO_{2}} is calculated)
 #' as a separate file. This function reads the data from a cycle file in the "All slopes" folder
 #' of an AquaResp experiment.
 #'
@@ -37,12 +37,12 @@ read_cycle <- function(cycle_number, path) {
 
 #' Calculate MO2 values for a specific AquaResp cycle
 #'
-#' Calculates mass-specific oxygen consumption (MO₂) for each chamber in a given cycle using linear regression on PO₂ data and experimental metadata.
+#' Calculates mass-specific oxygen consumption (\eqn{MO_{2}}) for each chamber in a given cycle using linear regression on \eqn{PO_{2}} data and experimental metadata.
 #'
-#' @param cycle_number Numeric. The cycle number to calculate MO₂ for.
+#' @param cycle_number Numeric. The cycle number to calculate \eqn{MO_{2}} for.
 #' @param path Character. The path to the AquaResp experiment directory.
 #'
-#' @return A named numeric vector of MO₂ values for each chamber.
+#' @return A named numeric vector of \eqn{MO_{2}} values for each chamber.
 #' @export
 #'
 #' @examples
@@ -90,11 +90,11 @@ calc_cycle_mo2s <-
 
 #' Get min and max PO2 values for each chamber in a cycle
 #'
-#' Extracts the minimum and maximum non-zero PO₂ values for each chamber from a cycle dataframe.
+#' Extracts the minimum and maximum non-zero \eqn{PO_{2}} values for each chamber from a cycle dataframe.
 #'
 #' @param cycle Dataframe. A cycle dataframe as returned by `read_cycle()`.
 #'
-#' @return A named numeric vector of min and max PO₂ values for each chamber.
+#' @return A named numeric vector of min and max \eqn{PO_{2}} values for each chamber.
 #' @export
 #'
 #' @examples
@@ -115,12 +115,14 @@ get_cycle_min_max <-
 
 #' Calculate percentage of zero PO2 values in a cycle
 #'
-#' Computes the percentage of zero values in each PO₂ column of a cycle dataframe.
-#' Values greater than zero would have an incorrect R² as calculated by AquaResp.
+#' Computes the percentage of zero values in each \eqn{PO_{2}} column of a cycle dataframe.
+#' Values greater than zero would have an incorrect \eqn{R^{2}} as calculated by AquaResp.
 #'
 #' @param cycle Dataframe. A cycle dataframe as returned by `read_cycle()`.
 #'
-#' @return A named list of percentages (0–100) indicating missingness per chamber.
+#' @encoding UTF-8
+#'
+#' @return A named vector of percentages (0 to 100%) indicating missingness per chamber.
 #' @export
 #'
 #' @examples
@@ -135,13 +137,13 @@ get_cycle_missingness <-
 
     lapply(cycle[po2_cols], function(x)
       round(length(which(x == 0)) / length(x), 4) * 100) |>
-      stats::setNames(paste0(names(cycle)[po2_cols], ".pct0"))
+      stats::setNames(gsub(".po2", "", paste0(names(cycle)[po2_cols], ".pct0"))) |>
+      unlist()
   }
-
 
 #' Calculate correlation between PO2 and time for each chamber
 #'
-#' Performs Pearson correlation (r) tests between PO₂ values and Unix time for each chamber in a cycle, retyrns r ^ 2
+#' Performs Pearson correlation (r) tests between \eqn{PO_{2}} values and Unix time for each chamber in a cycle, retyrns r ^ 2
 #'
 #' @param cycle Dataframe. A cycle dataframe as returned by `read_cycle()`.
 #'
@@ -168,22 +170,31 @@ get_cycle_R2s <-
           stats::cor.test(x = x.no0, y = secs.no0, method = "pearson")
       }, secs = cycle$Unix.Time)
 
-    r2s <- lapply(cors, function(x)
-      x$estimate^2) |> #returns r ^ 2
-      stats::setNames(paste0(names(cycle[po2_cols]), ".r2"))
-    return(r2s)
+    r2s <- lapply(cors, function(x) {
+      x$estimate^2 |> unname()
+      }) |> #returns r ^ 2
+      stats::setNames(gsub(".po2","",paste0(names(cycle[po2_cols]), ".r2")))
+
+    r2_pvals <- lapply(cors, function(x) {
+    x$p.value
+    }) |>
+      stats::setNames(gsub(".po2","",paste0(names(cycle[po2_cols]), ".p")))
+
+  unlist(c(r2s, r2_pvals))
   }
 
 
 #' Summarize PO2 metrics across all cycles in an experiment
 #'
-#' Generates a summary dataframe with PO₂ statistics (min, max, correlation, missingness)
+#' Generates a summary dataframe with \eqn{PO_{2}} statistics (min, max, correlation, missingness)
 #' for each cycle and chamber in the experiment. The correlations are calculated with
-#' missing values (PO₂ = 0) omitted to get around the bug in AquaResp.
+#' missing values (\eqn{PO_{2}} = 0) omitted to get around the bug in AquaResp.
+#'
+#' @encoding UTF-8
 #'
 #' @param path Character. The path to the AquaResp experiment directory.
 #'
-#' @return A dataframe with one row per cycle and columns for each PO₂ metric for each chamber.
+#' @return A dataframe with one row per cycle and columns for each \eqn{PO_{2}} metric for each chamber.
 #' @export
 #'
 #' @examples
@@ -203,7 +214,7 @@ get_exp_cycle_summary <- function(path){
       c(
         get_cycle_min_max(cycle),
         get_cycle_R2s(cycle),
-        unlist(get_cycle_missingness(cycle))
+        get_cycle_missingness(cycle)
       )
 
     return(cycle_summary)
@@ -211,28 +222,127 @@ get_exp_cycle_summary <- function(path){
   path = path) |> t() |> as.data.frame()
 }
 
+#' Pivot output from get_exp_cycle_summary() to long format
+#'
+#' This is a helper function
+#'
+#' @encoding UTF-8
+#'
+#' @param df Dataframe. Output from get_exp_cycle_summary()
+#'
+#' @return long format summary with columns for chamber and cycle and metrics - PO_2 minimum, PO_2 maximum, cycle correlation R^2, R^2 p value, and % missing PO_2 data.
+#' @export
+#' @examples
+#' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+#'                             package = "flatheadresp")
+#' x <- get_exp_cycle_summary(path = exp_dir_path)
+#' y <- pivot_cycle_summary_long(x)
+#' rbind(head(y),tail(y))
+pivot_cycle_summary_long <- function(df) {
+  df$cycle <- 1:nrow(df)
+
+  long_df <-df |>
+    tidyr::pivot_longer(cols = -cycle,
+                        names_to = c("chamber", "metric"),
+                        names_pattern = "ch(\\d+)\\.(.+)") |>
+    dplyr::mutate(chamber = as.integer(chamber)) |>
+    tidyr::pivot_wider(names_from = metric, values_from = value)
+  return(long_df)
+}
+
+#' Summarise experiment metadata
+#'
+#' Prints a summary of key experimental details including chambers, fish masses,
+#' respirometer volumes, cycle timing, and environmental conditions.
+#'
+#' @param path Character. The path to the AquaResp experiment directory.
+#'
+#' @return Invisibly returns NULL. Called for its side effect of printing to the console.
+#' @export
+#'
+#' @examples
+#' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+#'                              package = "flatheadresp")
+#' summarise_experiment(path = exp_dir_path)
+summarise_experiment <- function(path) {
+  chambers <- get_chambers(path)
+  meta <- get_exp_metadata(path)
+
+  cat("Experiment started", as.character(meta$exp_start[1]), "\n\n")
+  cat(length(chambers), "chambers\n\n")
+
+  # Fish masses
+  cat("Mass of fish by chamber:\n")
+  for (i in seq_along(chambers)) {
+    chamber <- chambers[i]
+    mass <- meta$`Mass.of.fish..kg`[i]
+    cat("  Chamber", chamber, ":", mass, "kg\n")
+  }
+
+  # Respirometer volumes
+  volumes <- meta$`Volume.respirometer..L`
+  if (length(unique(volumes)) == 1) {
+    cat("\nRespirometer volume is", volumes[1], "L for all chambers.\n")
+  } else {
+    cat("\nRespirometer volume by chamber:\n")
+    for (i in seq_along(chambers)) {
+      chamber <- chambers[i]
+      vol <- volumes[i]
+      cat("  Chamber", chamber, ":", vol, "L\n")
+    }
+  }
+
+  # Cycle timing
+  flush_time <- meta$`Flush.time..s`[1]
+  wait_time <- meta$`Wait.time..s`[1]
+  measure_time <- meta$`Measurement.time..s`[1]
+
+  cat("\nCycle timing:\n")
+  cat("  Flush time:", flush_time, "seconds\n")
+  cat("  Wait time:", wait_time, "seconds\n")
+  cat("  Measurement time:", measure_time, "seconds\n")
+
+  # Salinity and temperature
+  salinity <- meta$Salinity[1]
+  temperature <- meta$Temperature[1]
+
+  cat("\nEnvironmental conditions:\n")
+  cat("  Salinity:", salinity, "ppt\n")
+  cat("  Temperature:", temperature, "\u00B0C\n")
+
+  # data QA/QC metrics
+  cycle_summary <- get_exp_cycle_summary(path) |> pivot_cycle_summary_long()
+
+}
 
 #' Plot PO2 values for a specific cycle
 #'
-#' Generates a scatter plot of PO₂ values over time for each chamber in a given cycle.
+#' Generates a scatter plot of \eqn{PO_{2}} values over time for each chamber in a given cycle.
 #'
 #' @param cycle_number Numeric. The cycle number to plot.
 #' @param path Character. The path to the AquaResp experiment directory.
+#' @param ylim Numeric vector. The y axis plot limits, if NULL (default) it will be the range of po2 values across the cycle. May need to change to c(0, 100) or e.g. c(80,100) to zoom enough to see if there were any 0s or missing data (-300) during the cycle.
 #'
-#' @return A base-R plot of time vs PO₂.
+#' @return A base-R plot of time vs \eqn{PO_{2}}.
 #' @export
 #'
 #' @examples
 #' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
 #'                             package = "flatheadresp")
 #' plot_cycle_po2(cycle_number = 1, path = exp_dir_path)
-plot_cycle_po2 <- function(cycle_number, path) {
+
+plot_cycle_po2 <- function(cycle_number, path, ylim = NULL) {
 
   the_cycle <- read_cycle(cycle_number, path)
   color_palette <- c("#1F77B4", "#FF7F0E", "#2CA02C", "#D62728")
   po2cols <- grep("^ch[0-9]+\\.po2$", names(the_cycle))
-  plot(the_cycle$Unix.Time, the_cycle[[po2cols[1]]], col = color_palette[1], ylim = c(0,110))
+  if(is.null(ylim))
+    ylim <- range(the_cycle[po2cols]) +
+              c(-0.05, 0.05) * diff(range(the_cycle[po2cols]))
+  plot(the_cycle$Unix.Time, the_cycle[[po2cols[1]]],
+       col = color_palette[1], ylim = ylim)
   for (i in 2:length(po2cols)) {
-    graphics::points(the_cycle$Unix.Time, the_cycle[[po2cols[i]]], col = color_palette[i], ylim = c(0,110))
+    graphics::points(the_cycle$Unix.Time, the_cycle[[po2cols[i]]],
+                     col = color_palette[i])
   }
 }
