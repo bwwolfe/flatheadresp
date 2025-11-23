@@ -44,7 +44,7 @@ library(ggthemes)
 
 ## Load Example Data
 
-The package ships an example AquaResp experiment under `inst/extdata/aquaresp_experiment` that is used in the examples in the documentation. Use `system.file()` to locate it:
+The package ships an example AquaResp experiment under `inst/extdata/aquaresp_experiment` that is used in the examples in the documentation. Use `system.file()` to locate it.
 
 ```{r}
 exp_path <- system.file("extdata", "aquaresp_experiment",
@@ -52,15 +52,17 @@ exp_path <- system.file("extdata", "aquaresp_experiment",
 exp_path
 ```
 
+The good news is you only need to provide the experiment's file path and the package's functions will extract the needed files. Here, we've saved the experiment folder path as `exp_path`, and we can provide this to functions for analysis.
+
 The experiment directory is structured in the standard format used by AquaResp and this structure and file naming convention will be expected by the functions in this package:
 
 ```{r}
 list.files(exp_path)
 ```
 
-The good news is you only need to provide the experiment's file path and the package's functions will extract the needed files.
+This should be how AquaResp has automatically saved the experimental data, if e.g. you have four chambers, but worth noting if there are any differences in the naming conventions or if folders are renamed, it probably won't work (also, there is usually an "Experimental Information" folder created which was excluded with the example experiment because it was empty).
 
-## Experimental Metadata and MO₂
+## Experimental Metadata and MO₂ data
 
 A good starting point is the function `summarise_experiment()`, which will provide an easy to read summary of the experiment in a particular directory in the R console:
 
@@ -168,7 +170,7 @@ ggplot(mo2s |> subset(chamber != 4),
 Summarize PO₂ ranges and correlations:
 
 ```{r}
-cyc_summary <- get_exp_cycle_summary(exp_path)
+cyc_summary <- cycle_summary(exp_path)
 head(cyc_summary, n = 3)
 ```
 

@@ -18,4 +18,5 @@ Imports:
     stats,
     utils,
     dplyr,
-    tidyr
+    tidyr,
+    cli

@@ -303,7 +303,7 @@ ggplot(mo2s |> subset(chamber != 4),
 Summarize PO₂ ranges and correlations:
 
 ``` r
-cyc_summary <- get_exp_cycle_summary(exp_path)
+cyc_summary <- cycle_summary(exp_path)
 head(cyc_summary, n = 3)
 #>   ch1.po2.min ch1.po2.max ch2.po2.min ch2.po2.max ch3.po2.min ch3.po2.max
 #> 1      77.252      96.350      95.181     101.435      99.780     100.747
