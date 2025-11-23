@@ -19,4 +19,8 @@ Imports:
     utils,
     dplyr,
     tidyr,
-    cli
+    cli,
+    ggplot2,
+    cowplot,
+    tibble,
+    rlang
