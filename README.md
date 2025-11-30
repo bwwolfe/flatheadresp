@@ -491,7 +491,7 @@ measurements across a cycle’s measurement window:
 plot_cycle_po2(cycle_number = 9, path = exp_path)
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="50%" />
+![](man/figures/README-unnamed-chunk-15-1.png)<!-- -->
 
 Alternatively, you can read in a single cycle’s data with `read_cycle()`
 and plot with ggplot2. Convert to long format for plotting:
@@ -521,14 +521,13 @@ ggplot(cycle_long,
   theme_classic(9)
 ```
 
-<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
+![](man/figures/README-unnamed-chunk-17-1.png)<!-- -->
 
 ### Plotting MO<sub>2</sub> over time
 
 Visualize MO<sub>2</sub> across cycles with `plot_exp()`:
 
 ``` r
-
 plot_exp(path = exp_path, chambers = -4) #chamber 4 (blank) omitted
 #> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
 #> ℹ Please use `linewidth` instead.
@@ -539,7 +538,7 @@ plot_exp(path = exp_path, chambers = -4) #chamber 4 (blank) omitted
 #> generated.
 ```
 
-<img src="man/figures/README-unnamed-chunk-18-1.png" width="75%" />
+![](man/figures/README-unnamed-chunk-18-1.png)<!-- -->
 
 The setting `show_cycle_labels = FALSE` will remove the cycle number
 labels if they are getting too busy. Note that the output is a ggplot,
