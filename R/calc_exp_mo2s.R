@@ -259,9 +259,9 @@ calc_exp_mo2s <- function(path,
     # detail the cycles that had low r2, if this any
     if (n_all > 0)  {
       if (n_all <= 10) {
-        cli::cli_bullets(sprintf("Cycle(s) {.%s {%s}}", cls_all, n_all, paste(cycles_all, collapse = ", ")))
+        cli::cli_bullets(sprintf("Cycle(s) {.%s {%s}}", cls_all, paste(cycles_all, collapse = ", ")))
       } else {
-        cli::cli_bullets(sprintf("Cycle(s) {.%s {%s}}", cls_all, n_all, paste0(paste(cycles_all[1:10], collapse = ", "), " ...")))
+        cli::cli_bullets(sprintf("Cycle(s) {.%s {%s}}", cls_all, paste0(paste(cycles_all[1:10], collapse = ", "), " ...")))
       }
     }
     #  CHAMBER-LEVEL: cycles with corrected R.2 < 0.95 =====
