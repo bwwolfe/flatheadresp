@@ -197,7 +197,7 @@ calc_exp_mo2s(path = exp_path,
 
 Sometimes for diagnosing issues, it is useful to plot the raw oxygen measurements across a cycle's measurement window:
 
-```{r, fig.width=2, fig.height = 2}
+```{r, out.width = "50%"}
 plot_cycle_po2(cycle_number = 9, path = exp_path)
 ```
 
@@ -217,7 +217,7 @@ cycle_long <- cycle9 %>%
 
 Plot partial pressure of oxygen (PO~2~) in the chambers during the cycle:
 
-```{r, fig.height = 1.5, fig.width = 1.5}
+```{r, out.width = "50%"}
 library(ggplot2)
 ggplot(cycle_long,
        aes(Unix.Time - min(Unix.Time), po2, colour = chamber)) +
@@ -230,7 +230,7 @@ ggplot(cycle_long,
 
 Visualize MO~2~ across cycles with `plot_exp()`:
 
-```{r, fig.width = 6}
+```{r, out.width = "75%"}
 
 plot_exp(path = exp_path, chambers = -4) #chamber 4 (blank) omitted
 
