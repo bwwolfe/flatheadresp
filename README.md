@@ -122,7 +122,7 @@ summarise_experiment(exp_path)
 #> 
 #> ── Environmental Conditions
 #> Salinity: 35.5 ppt
-#> Temperature: 15.6 °C
+#> Temperature: 15.6 deg C
 #> 
 #> ── Fish Mass by Chamber
 #> Chamber 1: 0.123 kg
