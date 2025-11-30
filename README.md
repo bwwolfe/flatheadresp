@@ -395,25 +395,48 @@ effects. Put simply, mass-specific metabolic rates of animals tend to
 decrease as they increase in mass (both intra- and interspecifically).
 In other words, an animal that grows twice as large does not typically
 have twice as great of a metabolic rate, but usually slightly less than
-that. The general relationship between metabolic rate and body mass
-follows:
+that.
+
+#### Absolute Metabolic Rate
+
+The general relationship between absolute metabolic rate of an animal
+(i.e., not the mass-specific values <sup>{-1}</sup>{-1} we are usually
+working with with AquaResp, but ^{-1} — the total oxygen consumption
+rate of an animal) and its body mass follows:
 
 $$
-\mathrm{MO}_2 \propto M^b
+\mathrm{MO}_2^{\text{abs}} \propto M^b
 $$
 
 where:
 
-- $\mathrm{MO}_2$ = metabolic rate  
-
+- $\mathrm{MO}_2^{\text{abs}}$ = whole-animal metabolic rate (mg
+  O₂·h⁻¹)  
 - $M$ = body mass (kg)  
+- $b$ = allometric scaling exponent (commonly $b \approx 0.79$ for
+  teleost fish)
 
-- ## $b$ = allometric scaling exponent (commonly $b \approx 0.79$ for teleost fish (Clarke and Johnston 1999), in lieu of a species-specific value
+#### Mass-Specific Metabolic Rate
 
-To normalize to a scaling exponent $b$, multiply by $M^{1 - b}$:
+Since we are typically working with metabolic rate expressed **per unit
+mass** ( <sup>{-1}</sup>{-1}), then this relationship is modified
+slightly to:
 
 $$
-\mathrm{MO}_{2,b} = \mathrm{MO}_2 \times M^{(1 - b)}
+\mathrm{MO}_2^{\text{ms}} = \frac{\mathrm{MO}_2^{\text{abs}}}{M} \propto M^{\,b-1}
+$$
+
+Because $b < 1$, $b - 1$ is negative, so mass-specific metabolic rate
+decreases with increasing body size.
+
+------------------------------------------------------------------------
+
+#### Allometric Correction Formula
+
+To normalize a mass-specific rate to an exponent $b$, apply:
+
+$$
+\mathrm{MO}_{2,b} = \mathrm{MO}_2^{\text{ms}} \times M^{(1 - b)}
 $$
 
 This converts units from:
@@ -423,6 +446,30 @@ $$
 \quad \text{to} \quad
 \mathrm{mg\ O_2}\cdot \mathrm{h}^{-1}\cdot \mathrm{kg}^{-b}
 $$
+
+------------------------------------------------------------------------
+
+#### If MO₂ is Absolute
+
+For whole-animal metabolic rate (mg O₂·h⁻¹), normalize by dividing:
+
+$$
+\mathrm{MO}_{2,b} = \frac{\mathrm{MO}_2^{\text{abs}}}{M^b}
+$$
+
+Resulting units:
+
+$$
+\mathrm{mg\ O_2}\cdot \mathrm{h}^{-1}\cdot \mathrm{kg}^{-b}
+$$
+
+#### Citation
+
+Clarke, A. and Johnston, N.M. (1999), Scaling of metabolic rate with
+body mass and temperature in teleost fish. Journal of Animal Ecology,
+68: 893-905. <https://doi.org/10.1046/j.1365-2656.1999.00337.x>
+
+------------------------------------------------------------------------
 
 The function `allometric_correct()` will do this, given the output from
 `calc_exp_mo2s()` or `fix_exp_mo2s()`, or any dataframe with columns for
@@ -481,6 +528,9 @@ calc_exp_mo2s(path = exp_path,
 #> 2       2       1 2025-04-26 16:27:07 131.060852 84.402063   0.123
 #> 54      2       2 2025-04-26 16:27:07 107.923641 59.352151   0.058
 ```
+
+The allometrically corrected `MO2` column is added to the dataframe just
+after the original, with the scaling exponent `b` appended to its name.
 
 ## Monitoring and plotting
 
