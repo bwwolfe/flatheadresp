@@ -9,8 +9,14 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  fig.width  = 5,
+  fig.height = 3,
+  dpi        = 96,
+  fig.retina = 1,
+  out.width  = "450px"
 )
+
 ```
 
 # flatheadresp
@@ -217,7 +223,7 @@ cycle_long <- cycle9 %>%
 
 Plot partial pressure of oxygen (PO~2~) in the chambers during the cycle:
 
-```{r, out.width = "50%"}
+```{r, out.width = "100%"}
 library(ggplot2)
 ggplot(cycle_long,
        aes(Unix.Time - min(Unix.Time), po2, colour = chamber)) +

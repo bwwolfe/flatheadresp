@@ -521,7 +521,7 @@ ggplot(cycle_long,
   theme_classic(9)
 ```
 
-<img src="man/figures/README-unnamed-chunk-17-1.png" width="50%" />
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
 
 ### Plotting MO<sub>2</sub> over time
 
