@@ -1,6 +1,6 @@
 Package: flatheadresp
 Title: Analyse respirometry data from AquaResp
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person("Barrett", "Wolfe", , "barrett.wolfe@utas.edu.au", role = c("aut", "cre"))
 Description: This package contains functions that streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the TAF lab for flathead metabolic rate experiments), including importing AquaResp metadata and files into R, correcting for post-hoc bodymass changes, and calculating MO2 from raw data, including coefficients of determination (R^2) to overcome the bug in the AquaResp v3.0 version where any missing O_2 values resulted in erroneous or missing R^2 values.  

@@ -5,9 +5,9 @@
 \title{Fix \eqn{MO_{2}}  values for experimental chambers based on corrected fish masses and densities}
 \usage{
 fix_exp_mo2s(
-  path = NULL,
   mo2_data = NULL,
   metadata = NULL,
+  path = NULL,
   new_masses = NULL,
   new_densities = 1,
   mo2_col = "MO2",
@@ -20,13 +20,13 @@ fix_exp_mo2s(
 )
 }
 \arguments{
-\item{path}{Character string. Path to experiment directory. If provided, overrides
-\code{mo2_data} and \code{metadata}.}
-
 \item{mo2_data}{Data frame of \eqn{MO_{2}}  values (from \code{calc_exp_mo2s()} or \code{get_exp_mo2s()}).
 Required if \code{path} is \code{NULL}.}
 
 \item{metadata}{Data frame of chamber metadata. Required if \code{path} is \code{NULL}.}
+
+\item{path}{Character string. Path to experiment directory. If provided, overrides
+\code{mo2_data} and \code{metadata}.}
 
 \item{new_masses}{Numeric vector or list of new fish masses (kg). Can be named
 by chamber ID (e.g., \code{list("1" = 0.345)}) or unnamed (order corresponds to chambers).

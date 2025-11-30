@@ -1,4 +1,3 @@
-
 #' Get the active chambers from an AquaResp experiment directory
 #'
 #' This function scans the experiment directory and returns the chamber numbers

@@ -12,6 +12,8 @@
 #'   vs the original AquaResp logic (coded in Python).
 #' @param index_cols Character vector of index column names to join on.
 #'   Defaults to `c("cycle", "chamber")`.
+#' @param mass_col Character. Name of the chamber animal mass (kg) column in metadata. Defaults to
+#' `"Mass.of.fish..kg"`. Note that the returned mass column is the cleaner `Mass_kg`
 #' @param report Logical. If `TRUE` (default), a summary is printed to the console.
 #' @details
 #'
@@ -53,10 +55,11 @@
 #' calc_exp_mo2s(path = exp_dir_path)
 
 calc_exp_mo2s <- function(path,
-                          tolerance = 0.001,
-                          index_cols = c(cycle = "cycle", chamber = "chamber"),
                           chambers = NULL,
-                          report = TRUE) {
+                          tolerance = 0.001,
+                          report = TRUE,
+                          index_cols = c(cycle = "cycle", chamber = "chamber"),
+                          mass_col = "Mass.of.fish..kg") {
   # --- basic checks ---
   stopifnot(is.character(path), length(path) == 1)
   stopifnot(is.numeric(tolerance), length(tolerance) == 1, tolerance >= 0)
@@ -119,6 +122,9 @@ calc_exp_mo2s <- function(path,
   if (length(first_three_uncorrected) > 0) {
     out[first_three_uncorrected] <- orig[first_three_uncorrected]
   }
+
+
+
   remaining_orig_cols <- setdiff(orig_non_index, first_three_uncorrected)
   for (col in remaining_orig_cols) {
     out[[col]] <- if (col %in% names(corr_aligned)) corr_aligned[[col]] else orig[[col]]
@@ -294,6 +300,12 @@ calc_exp_mo2s <- function(path,
 
     cat("\n")
   }
+
+  metadata <- get_exp_metadata(path)
+
+  final$Mass_kg <-
+    metadata[[mass_col]][match(final[[chamber_col]], metadata[[chamber_col]])]
+
   as.data.frame(final)
 }
 

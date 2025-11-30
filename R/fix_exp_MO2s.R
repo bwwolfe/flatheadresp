@@ -12,11 +12,11 @@
 #' supplied. Chambers can be selectively updated by providing `NA` for unchanged
 #' masses or densities.
 #'
-#' @param path Character string. Path to experiment directory. If provided, overrides
-#' `mo2_data` and `metadata`.
 #' @param mo2_data Data frame of \eqn{MO_{2}}  values (from `calc_exp_mo2s()` or `get_exp_mo2s()`).
 #' Required if `path` is `NULL`.
 #' @param metadata Data frame of chamber metadata. Required if `path` is `NULL`.
+#' @param path Character string. Path to experiment directory. If provided, overrides
+#' `mo2_data` and `metadata`.
 #' @param new_masses Numeric vector or list of new fish masses (kg). Can be named
 #' by chamber ID (e.g., `list("1" = 0.345)`) or unnamed (order corresponds to chambers).
 #' Use `NA` for chambers that should not be changed.
@@ -44,9 +44,9 @@
 #'
 #' @export
 
-fix_exp_mo2s <- function(path = NULL,
-                         mo2_data = NULL,
+fix_exp_mo2s <- function(mo2_data = NULL,
                          metadata = NULL,
+                         path = NULL,
                          new_masses = NULL,
                          new_densities = 1.0,
                          mo2_col = "MO2",
@@ -257,8 +257,10 @@ fix_exp_mo2s <- function(path = NULL,
   dens_changed <- any(dens_map != 1.0)
 
   if (mass_changed) {
-    mo2_data$Mass_orig <- metadata[[mass_col]][match(mo2_data[[chamber_col]], metadata[[chamber_col]])]
-    mo2_data$Mass_new <- new_masses[as.character(mo2_data[[chamber_col]])]
+    if("Mass_kg" %in% names(mo2_data))
+      names(mo2_data)[names(mo2_data) == "Mass_kg"] <- "Mass_old"
+    mo2_data$Mass_kg <- new_masses[as.character(mo2_data[[chamber_col]])]
+    mo2_data$Mass_kg <- ifelse(is.na(mo2_data$Mass_kg), mo2_data$Mass_old, mo2_data$Mass_kg)
   }
 
   if (dens_changed) {

@@ -272,11 +272,11 @@ head(mo2_data, n = 1)
 #> 1            -0.9992922       0.9985849             0        1.774512e-05
 #>   avg.po2_uncorrected median.po2_uncorrected minimum.po2_uncorrected
 #> 1            87.01214                 86.936                  77.252
-#>   max.po2_uncorrected delta.po2_uncorrected
-#> 1               96.35                19.098
+#>   max.po2_uncorrected delta.po2_uncorrected Mass_kg
+#> 1               96.35                19.098   0.123
 ```
 
-### Updating animal masses and/or densities with `fix_exp_mo2s()`
+## Updating animal masses and/or densities with `fix_exp_mo2s()`
 
 Sometimes an animal mass is incorrectly entered for an experiment and
 needs to be updated. However, this is not as simple as multiplying the
@@ -373,12 +373,12 @@ density (if applicable) are appended at the end of the columns.
 
 ``` r
 head(fixed_mo2s[,c(1,2,6,7,40:43)], n = 5)
-#>     cycle chamber        MO2    MO2_orig Mass_orig Mass_new Density_orig
-#> 1       1       1 124.620356   124.19003     0.123       NA            1
-#> 53      1       2  88.871749    88.72963     0.058       NA            1
-#> 105     1       3   4.539734     4.52353     0.127       NA            1
-#> 157     1       4 -25.554630 -2625.96096     0.001      0.1            1
-#> 2       2       1 131.060852   130.60828     0.123       NA            1
+#>     cycle chamber        MO2    MO2_orig Mass_old Mass_kg Density_orig
+#> 1       1       1 124.620356   124.19003    0.123   0.123            1
+#> 53      1       2  88.871749    88.72963    0.058   0.058            1
+#> 105     1       3   4.539734     4.52353    0.127   0.127            1
+#> 157     1       4 -25.554630 -2625.96096    0.001   0.100            1
+#> 2       2       1 131.060852   130.60828    0.123   0.123            1
 #>     Density_new
 #> 1           1.1
 #> 53          1.1
@@ -387,7 +387,102 @@ head(fixed_mo2s[,c(1,2,6,7,40:43)], n = 5)
 #> 2           1.1
 ```
 
-## Plotting:
+### Allometric Correction of Metabolic Rate
+
+When comparing metabolic rates across organisms of different sizes, it
+is common to apply an allometric correction to account for body mass
+effects. Put simply, mass-specific metabolic rates of animals tend to
+decrease as they increase in mass (both intra- and interspecifically).
+In other words, an animal that grows twice as large does not typically
+have twice as great of a metabolic rate, but usually slightly less than
+that. The general relationship between metabolic rate and body mass
+follows:
+
+$$
+\mathrm{MO}_2 \propto M^b
+$$
+
+where:
+
+- $\mathrm{MO}_2$ = metabolic rate  
+
+- $M$ = body mass (kg)  
+
+- ## $b$ = allometric scaling exponent (commonly $b \approx 0.79$ for teleost fish (Clarke and Johnston 1999), in lieu of a species-specific value
+
+To normalize to a scaling exponent $b$, multiply by $M^{1 - b}$:
+
+$$
+\mathrm{MO}_{2,b} = \mathrm{MO}_2 \times M^{(1 - b)}
+$$
+
+This converts units from:
+
+$$
+\mathrm{mg\ O_2}\cdot \mathrm{h}^{-1}\cdot \mathrm{kg}^{-1}
+\quad \text{to} \quad
+\mathrm{mg\ O_2}\cdot \mathrm{h}^{-1}\cdot \mathrm{kg}^{-b}
+$$
+
+The function `allometric_correct()` will do this, given the output from
+`calc_exp_mo2s()` or `fix_exp_mo2s()`, or any dataframe with columns for
+`Mass_kg` and `MO2`:
+
+``` r
+
+calc_exp_mo2s(path = exp_path,
+              chambers = -4) |>
+  fix_exp_mo2s(metadata =
+                 get_exp_metadata(path = exp_path),
+               new_densities = 1.1) |>
+  allometric_correct(b = 0.79) |>
+  (\(x) head(x[,c(1,2,3,6,7,41)],n=5))() #this just to limit output to a few example values
+#> 
+#> ── MO2 Summary for selected chambers: 1, 2, 3 ──
+#> 
+#> With a po2 and r2 difference tolerance of 0.001:
+#> • 52  cycle(s) total.
+#> • 10  cycle(s) had corrected values.
+#> • 9   cycle(s) had an uncorrected minimum.po2 <= 0.
+#> • 1   cycle(s) had an uncorrected minimum.po2 < 0.
+#> • 9   cycle(s) R^2 were corrected (changed > 0.001).
+#> 
+#> Max percent of pO2 measurements missing (<= 0) in a cycle: 1.00%
+#> 
+#> 0 cycle(s) in which all selected chambers' corrected R.2 < 0.95.
+#> 
+#> Cycles with corrected R.2 < 0.95 by chamber:
+#> Chamber 1: 7 cycle(s) (18, 19, 20, 23, 27, 39, 45)
+#> Chamber 2: 16 cycle(s) (22, 29, 30, 32, 35, 37, 38, 40, 41, 42 ...)
+#> Chamber 3: 8 cycle(s) (1, 2, 3, 4, 5, 19, 22, 50)
+#> Warning: Number of chambers differ: 4 in metadata vs 3 in mo2_data.
+#> 
+#> ── Applying MO2 corrections per chamber ──
+#> 
+#> Chamber 1: 0.123 kg -> not changed
+#> Respirometer ratio (rRespFish): 26.24 -> 26.33 L/kg
+#> Density: original = 1.000 kg/L, new = 1.100 kg/L
+#> Mean MO2 % difference: 0.35%
+#> 
+#> Chamber 2: 0.058 kg -> not changed
+#> Respirometer ratio (rRespFish): 56.76 -> 56.85 L/kg
+#> Density: original = 1.000 kg/L, new = 1.100 kg/L
+#> Mean MO2 % difference: 0.16%
+#> 
+#> Chamber 3: 0.127 kg -> not changed
+#> Respirometer ratio (rRespFish): 25.38 -> 25.47 L/kg
+#> Density: original = 1.000 kg/L, new = 1.100 kg/L
+#> Mean MO2 % difference: 0.36%
+#> Warning: No rows found for chamber 4 in mo2_data. Skipping.
+#>     cycle chamber          Clock.TIME        MO2  MO2_0.79 Mass_kg
+#> 1       1       1 2025-04-26 16:02:07 124.620356 80.254439   0.123
+#> 53      1       2 2025-04-26 16:02:07  88.871749 48.874644   0.058
+#> 105     1       3 2025-04-26 16:02:07   4.539734  2.943264   0.127
+#> 2       2       1 2025-04-26 16:27:07 131.060852 84.402063   0.123
+#> 54      2       2 2025-04-26 16:27:07 107.923641 59.352151   0.058
+```
+
+## Monitoring and plotting
 
 Sometimes for diagnosing issues, it is useful to plot the raw oxygen
 measurements across a cycle’s measurement window:
@@ -396,7 +491,7 @@ measurements across a cycle’s measurement window:
 plot_cycle_po2(cycle_number = 9, path = exp_path)
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 Alternatively, you can read in a single cycle’s data with `read_cycle()`
 and plot with ggplot2. Convert to long format for plotting:
@@ -423,10 +518,10 @@ ggplot(cycle_long,
        aes(Unix.Time - min(Unix.Time), po2, colour = chamber)) +
   geom_path() +
   scale_colour_brewer(palette = "Dark2") +
-  theme_classic(12)
+  theme_classic(9)
 ```
 
-<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
 
 ### Plotting MO<sub>2</sub> over time
 
@@ -444,82 +539,29 @@ plot_exp(path = exp_path, chambers = -4) #chamber 4 (blank) omitted
 #> generated.
 ```
 
-<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
 
 The setting `show_cycle_labels = FALSE` will remove the cycle number
 labels if they are getting too busy. Note that the output is a ggplot,
 and so can be customised further by adding ggplot2 layers to it,
 e.g. theme() to change theme elements.
 
-## Monitoring
-
 For quick quality control checks and monitoring ongoing experiments, the
 `print_exp_mo2s()` function will provide an overview of both MO2 values
 and R^2s.
 
 ``` r
+
 print_exp_mo2s(exp_path)
-#>                  Ch1        Ch2        Ch3        Ch4   |     Start Time             
-#> Cycle 1   |     124.19      88.73       4.52   -2625.93 | 2025-04-26 16:02:07      
-#> Cycle 2   |     132.90     113.66       4.07    -157.10 | 2025-04-26 16:27:07      
-#> Cycle 3   |     120.47     109.80       0.07     272.57 | 2025-04-26 16:52:07      
-#> Cycle 4   |      98.28     108.07       4.96     564.54 | 2025-04-26 17:17:08      
-#> Cycle 5   |      86.05      99.45      51.46    1127.53 | 2025-04-26 17:42:07      
-#> Cycle 6   |      86.68      93.45      79.90     853.11 | 2025-04-26 18:07:07      
-#> Cycle 7   |     103.29      95.38      62.93     427.43 | 2025-04-26 18:32:07      
-#> Cycle 8   |      83.76      98.63      54.61     323.19 | 2025-04-26 18:57:07      
-#> Cycle 9   |      59.79     100.46      51.18     204.35 | 2025-04-26 19:22:07      
-#> Cycle 10  |      66.60     104.34      50.60     275.28 | 2025-04-26 19:47:07      
-#> Cycle 11  |      46.23      98.80      63.93     828.97 | 2025-04-26 20:12:07      
-#> Cycle 12  |      59.40      95.90      47.71     381.05 | 2025-04-26 20:37:07      
-#> Cycle 13  |      70.63      97.60      42.39     113.98 | 2025-04-26 21:02:07      
-#> Cycle 14  |      81.84      97.16      67.07     -24.64 | 2025-04-26 21:27:07      
-#> Cycle 15  |      52.27      95.83      41.19      25.87 | 2025-04-26 21:52:07      
-#> Cycle 16  |      36.34      87.05      39.57      21.00 | 2025-04-26 22:17:08      
-#> Cycle 17  |      54.46      95.28      36.79     610.08 | 2025-04-26 22:42:07      
-#> Cycle 18  |      38.77      61.33      34.70     178.55 | 2025-04-26 23:07:08      
-#> Cycle 19  |      41.29      62.66      48.51     -55.98 | 2025-04-26 23:32:08      
-#> Cycle 20  |      36.23      52.42      74.19     -61.83 | 2025-04-26 23:57:08      
-#> Cycle 21  |      42.74      52.49      47.01    -157.19 | 2025-04-27 00:22:08      
-#> Cycle 22  |      30.78      62.27      49.37    -426.20 | 2025-04-27 00:47:08      
-#> Cycle 23  |      55.81      39.32      85.85     271.24 | 2025-04-27 01:12:08      
-#> Cycle 24  |      47.55      34.09      43.48     184.76 | 2025-04-27 01:37:09      
-#> Cycle 25  |      31.84      31.81      45.31    -156.37 | 2025-04-27 02:02:08      
-#> Cycle 26  |      34.36      38.60      49.32     103.81 | 2025-04-27 02:27:08      
-#> Cycle 27  |      37.68      35.18      45.52    -204.60 | 2025-04-27 02:52:08      
-#> Cycle 28  |      33.01      38.64      94.00     -82.42 | 2025-04-27 03:17:08      
-#> Cycle 29  |      30.92      35.09      77.92     502.05 | 2025-04-27 03:42:09      
-#> Cycle 30  |      22.15      25.79      58.20      54.17 | 2025-04-27 04:07:08      
-#> Cycle 31  |      22.89      28.44      66.09    -140.52 | 2025-04-27 04:32:08      
-#> Cycle 32  |      21.50      34.29      85.57    -242.99 | 2025-04-27 04:57:08      
-#> Cycle 33  |      22.30      73.48     137.25    -211.91 | 2025-04-27 05:22:09      
-#> Cycle 34  |      23.73      43.47      92.29    -111.58 | 2025-04-27 05:47:09      
-#> Cycle 35  |      22.63      34.42      64.60     416.33 | 2025-04-27 06:12:09      
-#> Cycle 36  |      17.68      20.62      54.02    -224.83 | 2025-04-27 06:37:09      
-#> Cycle 37  |      19.88      27.68      55.58    -156.69 | 2025-04-27 07:02:09      
-#> Cycle 38  |      19.44      33.80      52.36    -225.43 | 2025-04-27 07:27:09      
-#> Cycle 39  |      27.77      34.59      47.08    -174.29 | 2025-04-27 07:52:09      
-#> Cycle 40  |      23.28      33.75      47.52    -151.73 | 2025-04-27 08:17:09      
-#> Cycle 41  |      21.88      31.72      36.04     437.53 | 2025-04-27 08:42:09      
-#> Cycle 42  |      20.84      38.02      35.91     438.60 | 2025-04-27 09:07:09      
-#> Cycle 43  |      20.00      28.66      33.44    -187.84 | 2025-04-27 09:32:09      
-#> Cycle 44  |      23.04      31.08      38.85    -222.35 | 2025-04-27 09:57:09      
-#> Cycle 45  |      28.94      31.10      40.71    -233.34 | 2025-04-27 10:22:09      
-#> Cycle 46  |      22.40      32.67      36.54    -164.52 | 2025-04-27 10:47:09      
-#> Cycle 47  |      20.65      31.69      33.90     139.55 | 2025-04-27 11:12:09      
-#> Cycle 48  |      20.42      28.07      33.74     255.32 | 2025-04-27 11:37:10      
-#> Cycle 49  |      17.09      21.52      33.67      50.99 | 2025-04-27 12:02:10      
-#> Cycle 50  |      18.69      26.25      42.76    -188.53 | 2025-04-27 12:27:10      
-#> Cycle 51  |      20.27      28.05      34.39    -235.79 | 2025-04-27 12:52:10      
-#> Cycle 52  |      29.02      31.42      34.56    -199.99 | 2025-04-27 13:17:10      
-#> 
-#>                                Legend                               
-#>    min                                                         max
-#>   -2625.93 ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 1127.53
-#>   (no colour scaling in low-colour mode)
-#>   Flags:  R2 < 0.95 → value; missing pO2s → value; both → value
-#>   Counts: R2 < 0.95 = 99,     missing pO2s = 33,     both = 33
 ```
+
+<figure>
+<img src="man/figures/README-print_exp_mo2s-output.png"
+alt="example output from print_exp_mo2s() - colour formatting doesn’t show up in the regular code output of the github readme" />
+<figcaption aria-hidden="true">example output from print_exp_mo2s() -
+colour formatting doesn’t show up in the regular code output of the
+github readme</figcaption>
+</figure>
 
 <!-- ## Cycle Summary -->
 <!-- Plot PO₂ min/max per cycle: -->

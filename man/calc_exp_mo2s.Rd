@@ -6,26 +6,30 @@
 \usage{
 calc_exp_mo2s(
   path,
-  tolerance = 0.001,
-  index_cols = c(cycle = "cycle", chamber = "chamber"),
   chambers = NULL,
-  report = TRUE
+  tolerance = 0.001,
+  report = TRUE,
+  index_cols = c(cycle = "cycle", chamber = "chamber"),
+  mass_col = "Mass.of.fish..kg"
 )
 }
 \arguments{
 \item{path}{Character. Experiment directory.}
+
+\item{chambers}{Numeric. The chamber numbers to include, negative subsets will exclude those chambers.}
 
 \item{tolerance}{Numeric (non-negative). Tolerance for differences in
 \code{delta.po2} and \code{R.2} to flag corrections. Defaults to \code{0.001}, as there may
 be small rounding differences in the statistics calculated by this package
 vs the original AquaResp logic (coded in Python).}
 
+\item{report}{Logical. If \code{TRUE} (default), a summary is printed to the console.}
+
 \item{index_cols}{Character vector of index column names to join on.
 Defaults to \code{c("cycle", "chamber")}.}
 
-\item{chambers}{Numeric. The chamber numbers to include, negative subsets will exclude those chambers.}
-
-\item{report}{Logical. If \code{TRUE} (default), a summary is printed to the console.}
+\item{mass_col}{Character. Name of the chamber animal mass (kg) column in metadata. Defaults to
+\code{"Mass.of.fish..kg"}. Note that the returned mass column is the cleaner \code{Mass_kg}}
 }
 \value{
 A data.frame with the column order described above.

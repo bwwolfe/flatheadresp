@@ -104,7 +104,7 @@ mo2_data <- calc_exp_mo2s(exp_path, chambers = -4)
 
 ```
 
-`calc_exp_mo2s()` provides a summary of corrections and some metrics that are useful to flag data quality issues. Details about these metrics and their use can be found in the `?calc_exp_mo2s` documentation Details section.  
+`calc_exp_mo2s()` provides a summary of corrections and some metrics that are useful to flag data quality issues. Details about these metrics and their use can be found in the `?calc_exp_mo2s` documentation Details section.
 
 The function itself returns all of the original columns that AquaResp saves to file and `get_exp_mo2s()` returns, however the recalculated values take the place in the first few columns, followed by the original values which are at the end of the dataframe's columns:
 
@@ -112,11 +112,11 @@ The function itself returns all of the original columns that AquaResp saves to f
 head(mo2_data, n = 1)
 ```
 
-### Updating animal masses and/or densities with `fix_exp_mo2s()`
+## Updating animal masses and/or densities with `fix_exp_mo2s()`
 
 Sometimes an animal mass is incorrectly entered for an experiment and needs to be updated. However, this is not as simple as multiplying the mass-specific MO_2 by the original mass and re-dividing by the new mass, as the animal mass is also used by AquaResp to calculate the real volume of the respirometer (assuming neutral buoyancy of the animal in freshwater e.g. 1 kg of fish = 1 L volume). The `fix_exp_mo2s()` function will take new masses (in kg) for one or more of the experiment's chambers and perform this recalculation.
 
-Also, the implicitly assumed density that AquaResp uses (1 kg/L) would probably be a safe assumption for freshwater animals that are neutrally buoyant, but is already slightly off for neutral buoyancy in seawater (~1.025 kg/L), and will also be incorrect for benthic species that sink. For example, Sand Flathead are (based on a few tests by the author) about 1.1 kg/L. So the `fix_exp_mo2()` function allows for both masses and densities to be updated and will correct the values accordingly.
+Also, the implicitly assumed density that AquaResp uses (1 kg/L) would probably be a safe assumption for freshwater animals that are neutrally buoyant, but is already slightly off for neutral buoyancy in seawater (\~1.025 kg/L), and will also be incorrect for benthic species that sink. For example, Sand Flathead are (based on a few tests by the author) about 1.1 kg/L. So the `fix_exp_mo2()` function allows for both masses and densities to be updated and will correct the values accordingly.
 
 For example, let's say after the experiment it was found the 2nd and 3rd chambers' masses were accidentally swapped when entered into AquaResp and need to be swapped back:
 
@@ -130,6 +130,7 @@ invisible(
                                             # i.e. this works the same: c(NA, 0.127, 0.058, NA)
 
 ```
+
 Or, we can update all of the chambers' values with the appropriate density for the species (the blank chamber 4 mass is changed to 0.1 kg as well for illustration):
 
 ```{r}
@@ -147,11 +148,54 @@ Note in the below output of `fix_exp_mo2s()` with most of the columns omitted fo
 head(fixed_mo2s[,c(1,2,6,7,40:43)], n = 5)
 ```
 
+### Allometric Correction of Metabolic Rate
 
-## Plotting:
+When comparing metabolic rates across organisms of different sizes, it is common to apply an allometric correction to account for body mass effects. 
+Put simply, mass-specific metabolic rates of animals tend to decrease as they increase in mass (both intra- and interspecifically). In other words, an animal that grows twice as large does not typically have twice as great of a metabolic rate, but usually slightly less than that. The general relationship between metabolic rate and body mass follows:
+
+$$
+\mathrm{MO}_2 \propto M^b
+$$
+
+where:
+
+- \( \mathrm{MO}_2 \) = metabolic rate  
+- \( M \) = body mass (kg)  
+- \( b \) = allometric scaling exponent (commonly \( b \approx 0.79 \) for teleost fish (Clarke and Johnston 1999), in lieu of a species-specific value
+---
+
+To normalize to a scaling exponent \( b \), multiply by \( M^{1 - b} \):
+
+$$
+\mathrm{MO}_{2,b} = \mathrm{MO}_2 \times M^{(1 - b)}
+$$
+
+This converts units from:
+
+$$
+\mathrm{mg\ O_2}\cdot \mathrm{h}^{-1}\cdot \mathrm{kg}^{-1}
+\quad \text{to} \quad
+\mathrm{mg\ O_2}\cdot \mathrm{h}^{-1}\cdot \mathrm{kg}^{-b}
+$$
+
+The function `allometric_correct()` will do this, given the output from `calc_exp_mo2s()` or `fix_exp_mo2s()`, or any dataframe with columns for `Mass_kg` and `MO2`:
+
+```{r}
+
+calc_exp_mo2s(path = exp_path,
+              chambers = -4) |>
+  fix_exp_mo2s(metadata =
+                 get_exp_metadata(path = exp_path),
+               new_densities = 1.1) |>
+  allometric_correct(b = 0.79) |>
+  (\(x) head(x[,c(1,2,3,6,7,41)],n=5))() #this just to limit output to a few example values
+
+```
 
 
-Sometimes for diagnosing issues, it is useful to plot the raw oxygen measurements across a cycle's measurement window: 
+## Monitoring and plotting
+
+Sometimes for diagnosing issues, it is useful to plot the raw oxygen measurements across a cycle's measurement window:
 
 ```{r}
 plot_cycle_po2(cycle_number = 9, path = exp_path)
@@ -173,18 +217,18 @@ cycle_long <- cycle9 %>%
 
 Plot partial pressure of oxygen (PO~2~) in the chambers during the cycle:
 
-```{r}
+```{r, fig.height = 3, fig.width = 3}
 library(ggplot2)
 ggplot(cycle_long,
        aes(Unix.Time - min(Unix.Time), po2, colour = chamber)) +
   geom_path() +
   scale_colour_brewer(palette = "Dark2") +
-  theme_classic(12)
+  theme_classic(9)
 ```
 
 ### Plotting MO~2~ over time
 
-Visualize MO~2~ across cycles with `plot_exp()`:  
+Visualize MO~2~ across cycles with `plot_exp()`:
 
 ```{r, fig.width = 9}
 
@@ -192,33 +236,43 @@ plot_exp(path = exp_path, chambers = -4) #chamber 4 (blank) omitted
 
 ```
 
+The setting `show_cycle_labels = FALSE` will remove the cycle number labels if they are getting too busy. Note that the output is a ggplot, and so can be customised further by adding ggplot2 layers to it, e.g. theme() to change theme elements.
 
-The setting `show_cycle_labels = FALSE` will remove the cycle number labels if they are getting too busy. Note that the output is a ggplot, and so can be customised further by adding ggplot2 layers to it, e.g. theme() to change theme elements.  
 
-## Monitoring
+For quick quality control checks and monitoring ongoing experiments, the `print_exp_mo2s()` function will provide an overview of both MO2 values and R\^2s.
 
-For quick quality control checks and monitoring ongoing experiments, the `print_exp_mo2s()` function will provide an overview of both MO2 values and R^2s.
+```{r, eval = FALSE}
 
-```{r, max.height = '100px'}
 print_exp_mo2s(exp_path)
+
 ```
 
+![example output from print_exp_mo2s() - colour formatting doesn't show up in the regular code output of the github readme](man/figures/README-print_exp_mo2s-output.png)
 
 <!-- ## Cycle Summary -->
 
 <!-- Plot PO₂ min/max per cycle: -->
 
 <!-- ```{r, fig.width = 8} -->
+
 <!-- mo2_data <- calc_exp_mo2s(path = exp_path, report = FALSE) -->
 
-
 <!-- ggplot(mo2_data, -->
+
 <!--        aes(x = cycle, colour = as.factor(chamber))) + -->
+
 <!--   geom_segment(aes(y = minimum.po2, yend = max.po2), -->
+
 <!--                position = position_dodge2(width = .6), -->
+
 <!--                linewidth = 0.8) + -->
+
 <!--   theme_classic(16) + -->
+
 <!--   scale_colour_brewer("Chamber", palette = "Dark2")+ -->
+
 <!--   scale_y_continuous(expression(p*O[2]~"range during cycle"~`(`*'%'~O[2]~"sat"*`)`)) + -->
+
 <!--   labs(x = "Cycle #") -->
+
 <!-- ``` -->
