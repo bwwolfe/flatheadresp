@@ -122,9 +122,6 @@ calc_exp_mo2s <- function(path,
   if (length(first_three_uncorrected) > 0) {
     out[first_three_uncorrected] <- orig[first_three_uncorrected]
   }
-
-
-
   remaining_orig_cols <- setdiff(orig_non_index, first_three_uncorrected)
   for (col in remaining_orig_cols) {
     out[[col]] <- if (col %in% names(corr_aligned)) corr_aligned[[col]] else orig[[col]]
@@ -173,7 +170,9 @@ calc_exp_mo2s <- function(path,
     r2_changed_rows <- corrected_flag & diff_r2
     n_r2_diff <- length(unique(orig[[cycle_col]][r2_changed_rows]))
 
-    r2_low_rows <- if (!is.null(r2_corr)) na2false(r2_corr < 0.95) else rep(FALSE, nrow(out))
+    r2_low_rows <-
+      if (!is.null(r2_corr)) na2false(r2_corr < 0.95) else
+      rep(FALSE, nrow(out))
 
     pct0_vec <- if ("pct0" %in% names(corr_aligned)) corr_aligned[["pct0"]] else NA_real_
     max_pct0 <- suppressWarnings(max(pct0_vec, na.rm = TRUE))
@@ -190,9 +189,10 @@ calc_exp_mo2s <- function(path,
       h3             = list(color = "cyan",  "font-weight" = "bold")
     ))
 
-    header_text <- ifelse(is.null(chambers),
-                          "MO2 Summary for all chambers {.strong {paste(chambers, collapse = ', ')}}",
-                          "MO2 Summary for selected chambers: {.strong {paste(chambers, collapse = ', ')}}")
+    header_text <-
+      ifelse(is.null(chambers),
+            "MO2 Summary for all chambers {.strong {paste(chambers, collapse = ', ')}}",
+            "MO2 Summary for selected chambers: {.strong {paste(chambers, collapse = ', ')}}")
 
     cli::cli_h2(header_text)
 
@@ -259,9 +259,9 @@ calc_exp_mo2s <- function(path,
     # detail the cycles that had low r2, if this any
     if (n_all > 0)  {
       if (n_all <= 10) {
-        cli::cli_bullets(sprintf("Cycle(s) {.%s {%s}}", cls_all, paste(cycles_all, collapse = ", ")))
+        cli::cli_bullets(sprintf("Cycle(s) {.%s %s}", cls_all, paste(cycles_all, collapse = ", ")))
       } else {
-        cli::cli_bullets(sprintf("Cycle(s) {.%s {%s}}", cls_all, paste0(paste(cycles_all[1:10], collapse = ", "), " ...")))
+        cli::cli_bullets(sprintf("Cycle(s) {.%s %s}", cls_all, paste0(paste(cycles_all[1:10], collapse = ", "), " ...")))
       }
     }
     #  CHAMBER-LEVEL: cycles with corrected R.2 < 0.95 =====
