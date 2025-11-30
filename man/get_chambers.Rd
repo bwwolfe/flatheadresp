@@ -20,7 +20,9 @@ for which summary data files are available. These correspond to the active chamb
 used during the AquaResp experiment.
 }
 \examples{
-\dontrun{
-get_chambers(path = "~/data/Resp/Experiment_1")
-}
+# Locate the example AquaResp experiment directory shipped with the package
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+print(exp_dir_path)
+get_chambers(path = exp_dir_path)
 }

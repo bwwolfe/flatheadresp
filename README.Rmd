@@ -21,9 +21,15 @@ knitr::opts_chunk$set(
 
 The goal of flatheadresp is to streamline working with respirometry data that is produced from the AquaResp software (i.e., used in the IMAS Taroona Aquaculture Facility lab for flathead metabolic rate experiments), including importing AquaResp metadata and experimental data files into R, correcting mass-specific $\dot M O_2$ for post-experiment body mass measurements or other fixes, and calculating $\dot M O_2$ from the linear regression slope of raw O2 data and correlation of O~2~ \~ time.
 
-AquaResp provide mass-specific oxygen consumption ($\dot M O_2$) estimates for animals from oxygen concentration in each experimental chamber during the sealed measurement portion of each flush-wait-measure cycle. $\dot M O_2$ is provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of fish bodyweight per hour). $\dot M O_2$ are calculated from the slope of a regression line fit to (declining) oxygen concentration within the sealed chamber over time. Oxygen concentration is sampled from the probe in the experimental chamber every second. As is standard for respirometry work, $\dot M O_2$ estimates are quality controlled with the coefficients of determination ($R^2$) calculated with Pearson's correlation, with $\dot M O_2$ values of $R^2 \geq 0.95$ considered precise enough. However, there is a bug in AquaResp where occasionally, an O~2~ concentration measurement is missed and recorded as a 0 instead of NA, and then this causes an erroneously low $R^2$ (and presumably a slightly low slope and $\dot M O_2$ estimate as well). This allows calculating accurate $R^2$ to overcome the bug in the AquaResp v3.0 version where any missing O~2~ values resulted in erroneous $R^2$ values for MO2 measurements.
+AquaResp provide mass-specific oxygen consumption ($\dot M O_2$) estimates for animals from oxygen concentration in each experimental chamber during the sealed measurement portion of each flush-wait-measure cycle. $\dot M O_2$ is provided in units of mg O₂/kg/hr (milligrams of oxygen per kilogram of fish bodyweight per hour). $\dot M O_2$ are calculated from the slope of a regression line fit to (declining) oxygen concentration within the sealed chamber over time. Oxygen concentration is sampled from the probe in the experimental chamber every second. As is standard for respirometry work, $\dot M O_2$ estimates are quality controlled with the coefficients of determination ($R^2$) calculated with Pearson's correlation, with $\dot M O_2$ values of $R^2 \geq 0.95$ considered precise enough. However, there is a bug in AquaResp where occasionally, an O~2~ concentration measurement is missed and recorded as a 0 instead of NA, and then this causes an erroneously low $R^2$ (Another source of error in this calculation is the Firesting probes used in the IMAS TAF lab also sometimes register a -300 for PO2 if the optical probe is removed from its housing). This bug will also create a slightly smaller magnitude slope and thus $\dot M O_2$ estimate as well.
 
-## Installation  
+The functionality in this package allows for calculating accurate $R^2$ to overcome the bug in the AquaResp v3.0 version where any missing O~2~ values resulted in erroneous $R^2$ values for MO2 measurements. Doing this manually requires opening each measurement cycle's file (sometimes hundreds, e.g. SDA experiments) and hand-calculating MO2 values.
+
+Another useful function will allow animal masses and densities to be corrected (AquaResp assume 1 kg/L which would be neutral buoyancy in freshwater and slightly positively buoyant in saltwater, however benthic Sand Flathead are around 1.1 kg/L).
+
+`flatheadresp` also provides tools for monitoring experiments in real-time.
+
+## Installation
 
 You can install the development version of flatheadresp from [GitHub](https://github.com/) with:
 
@@ -32,168 +38,187 @@ You can install the development version of flatheadresp from [GitHub](https://gi
 pak::pak("bwwolfe/flatheadresp")
 ```
 
-## Example
+## How to use
 
 ```{r}
 library(flatheadresp)
-library(tidyr)
-library(ggplot2)
-library(cowplot)
-library(ggthemes)
 ```
 
-## Load Example Data
+### Load Example Data
 
 The package ships an example AquaResp experiment under `inst/extdata/aquaresp_experiment` that is used in the examples in the documentation. Use `system.file()` to locate it.
 
 ```{r}
 exp_path <- system.file("extdata", "aquaresp_experiment",
                             package = "flatheadresp")
-exp_path
 ```
 
-The good news is you only need to provide the experiment's file path and the package's functions will extract the needed files. Here, we've saved the experiment folder path as `exp_path`, and we can provide this to functions for analysis.
+The good news is you only need to provide the file path of the experiment you want to analyse as the `path =` argument, and the package's functions will extract the needed files. Here, we've saved the experiment folder path as `exp_path`, and we can provide this to functions for analysis. If you want to see where the files are saved and browse them yourself, you can see the directory path with `print(exp_path)` or just type `exp_path` into the console.
 
-The experiment directory is structured in the standard format used by AquaResp and this structure and file naming convention will be expected by the functions in this package:
+This demo experiment's directory is structured in the standard format used by AquaResp and this structure and file naming convention will be expected by the functions in this package:
 
 ```{r}
 list.files(exp_path)
 ```
 
-This should be how AquaResp has automatically saved the experimental data, if e.g. you have four chambers, but worth noting if there are any differences in the naming conventions or if folders are renamed, it probably won't work (also, there is usually an "Experimental Information" folder created which was excluded with the example experiment because it was empty).
+This should be how AquaResp has automatically saved the experimental data, if e.g. you have four chambers, but worth noting if there are any differences in the naming conventions or if folders are renamed, it probably won't work (also, there is usually an "Experimental Information" folder created which was excluded with the example experiment because it was empty). Herein *'experiment'* will refer to that which is recorded in the `exp_path`.
 
-## Experimental Metadata and MO₂ data
+### Getting started
 
-A good starting point is the function `summarise_experiment()`, which will provide an easy to read summary of the experiment in a particular directory in the R console:
+A good starting point is the function `summarise_experiment()`, which will provide an easy to read summary of the experiment:
 
 ```{r}
 summarise_experiment(exp_path)
 ```
 
+Here we can see there were three fish (Sand Flathead, *Platycephalus bassensis*) were ran with masses from 58 g to 127 g, and Chamber 4 (ran as a blank to measure background respiration), had an arbitrary 0.001 kg mass entered.
 
-Retrieve metadata for all chambers:
+To see all of the metadata for all chambers that AquaResp has stored, get_exp_metadata will provide it collated into a dataframe:
 
 ```{r}
 get_exp_metadata(exp_path)
 ```
 
-Get AquaResp-calculated MO₂s for a given chamber:
+### Load original, uncorrected AquaResp data with `get_exp_mo2s()`
 
-```{r}
-chamber2_mo2s <- get_exp_MO2s(exp_path, chamber = 2)
-head(chamber2_mo2s, n = 3)
+To get the experimental MO_2 data that AquaResp recorded/calculated, use the function `get_exp_mo2s()`, which returns it as a dataframe collated for all chambers and cycles. No corrections are applied at this point. There is `chambers` argument which will allow for subsetting by chamber, e.g. to exclude the blank respirometer chamber 4 (here just the first few rows are shown):
+
+```{r, eval = FALSE}
+
+get_exp_mo2s(exp_path, chambers = c(1,2,3)) # or chamber = -4
+
 ```
 
-Or for all chambers:
+```{r, echo = FALSE}
+get_exp_mo2s(exp_path, chamber = c(1,2,3)) |> head(n = 4)
 
-```{r}
-mo2s <- get_exp_MO2s(exp_path)
-head(mo2s, n = 3)
 ```
 
-Correct MO₂ if a fish mass was entered incorrectly:
+## Recalculate experimental MO_2s with `calc_exp_mo2s()`
+
+Generally speaking, however, you will want to use the main workhorse function of `flatheadresp`, `calc_exp_mo2s()`. This function recalculates all of the MO2 and related regression and correlation stats after removing spurious missing PO2 values from the data, and also fixes an AquaResp bug that results in spurious MO2 calculations for any measurements that span midnight on the computer clock time. The function will also return the original AquaResp data, with `_uncorrected` appended to their names.
 
 ```{r}
-fix_exp_MO2s(exp_path, chamber = 1, new_mass = 0.200)
+
+mo2_data <- calc_exp_mo2s(exp_path, chambers = -4)
+
 ```
 
-## Cycle-Level Data
+`calc_exp_mo2s()` provides a summary of corrections and some metrics that are useful to flag data quality issues. Details about these metrics and their use can be found in the `?calc_exp_mo2s` documentation Details section.  
 
-Read a single cycle file:
+The function itself returns all of the original columns that AquaResp saves to file and `get_exp_mo2s()` returns, however the recalculated values take the place in the first few columns, followed by the original values which are at the end of the dataframe's columns:
 
 ```{r}
-cycle <- read_cycle(cycle_number = 9, path = exp_path)
-head(cycle, n = 3)
+head(mo2_data, n = 1)
 ```
 
-Plot PO~2~ across a given cycle:
+### Updating animal masses and/or densities with `fix_exp_mo2s()`
+
+Sometimes an animal mass is incorrectly entered for an experiment and needs to be updated. However, this is not as simple as multiplying the mass-specific MO_2 by the original mass and re-dividing by the new mass, as the animal mass is also used by AquaResp to calculate the real volume of the respirometer (assuming neutral buoyancy of the animal in freshwater e.g. 1 kg of fish = 1 L volume). The `fix_exp_mo2s()` function will take new masses (in kg) for one or more of the experiment's chambers and perform this recalculation.
+
+Also, the implicitly assumed density that AquaResp uses (1 kg/L) would probably be a safe assumption for freshwater animals that are neutrally buoyant, but is already slightly off for neutral buoyancy in seawater (~1.025 kg/L), and will also be incorrect for benthic species that sink. For example, Sand Flathead are (based on a few tests by the author) about 1.1 kg/L. So the `fix_exp_mo2()` function allows for both masses and densities to be updated and will correct the values accordingly.
+
+For example, let's say after the experiment it was found the 2nd and 3rd chambers' masses were accidentally swapped when entered into AquaResp and need to be swapped back:
+
+```{r}
+
+invisible(
+  fix_exp_mo2s(path = exp_path,
+  new_masses = c(`2` = 0.127, `3` = 0.058)) # name each new mass with the chamber number
+  )                                         # in backticks or use NA for chambers that
+                                            # don't need to be updated
+                                            # i.e. this works the same: c(NA, 0.127, 0.058, NA)
+
+```
+Or, we can update all of the chambers' values with the appropriate density for the species (the blank chamber 4 mass is changed to 0.1 kg as well for illustration):
+
+```{r}
+fixed_mo2s <-
+  fix_exp_mo2s(path = exp_path,
+               new_masses = c(`4` = 0.1), #single named value in vector - only applies to that chamber
+               new_densities = 1.1) #if only scalar value is provided, it is applied to all chambers 
+```
+
+As you can see, the result of including an appropriate density value varies with the mass of the animal, so it could be an important thing to correct for if the species is much different from the default 1 kg/L. Both mass and density can be updated simultaneously.
+
+Note in the below output of `fix_exp_mo2s()` with most of the columns omitted for brevity --- the **fixed** MO2 is now in the `MO2` column, while the original value returned by `calc_exp_mo2s()` is retained but renamed `MO2_orig`. Also, new columns for the original and new mass and density (if applicable) are appended at the end of the columns.
+
+```{r}
+head(fixed_mo2s[,c(1,2,6,7,40:43)], n = 5)
+```
+
+
+## Plotting:
+
+
+Sometimes for diagnosing issues, it is useful to plot the raw oxygen measurements across a cycle's measurement window: 
 
 ```{r}
 plot_cycle_po2(cycle_number = 9, path = exp_path)
 ```
 
-Alternatively, you can manipulate the cycle data and plot with ggplot2. Convert to long format for plotting:
+Alternatively, you can read in a single cycle's data with `read_cycle()` and plot with ggplot2. Convert to long format for plotting:
 
-```{r}
-cycle_long <- cycle %>%
-  pivot_longer(cols = starts_with("ch"),
+```{r, warning = FALSE, message = FALSE}
+library(tidyr)
+
+cycle9 <- read_cycle(cycle_number = 9, path = exp_path) 
+
+cycle_long <- cycle9 %>%
+  tidyr::pivot_longer(cols = starts_with("ch"),
                names_to = "chamber",
                names_pattern = "ch(\\d)\\.po2",
                values_to = "po2")
 ```
 
-Plot partial pressure of oxygen (PO₂) in the chambers during the cycle:
+Plot partial pressure of oxygen (PO~2~) in the chambers during the cycle:
 
 ```{r}
-ggplot(cycle_long |> subset(po2 > 0),
+library(ggplot2)
+ggplot(cycle_long,
        aes(Unix.Time - min(Unix.Time), po2, colour = chamber)) +
   geom_path() +
-  scale_colour_tableau("Tableau 10") +
-  theme_cowplot(12)
+  scale_colour_brewer(palette = "Dark2") +
+  theme_classic(12)
 ```
 
-## MO₂ Trends Over Time
+### Plotting MO~2~ over time
 
-Visualize MO₂ across cycles:
+Visualize MO~2~ across cycles with `plot_exp()`:  
 
-```{r}
-mo2s <- transform(mo2s, chamber = factor(chamber))
+```{r, fig.width = 9}
 
-ggplot(mo2s,
-       aes(x = TIME.HOURS, y = MO2 / 100,
-           colour = chamber, shape = chamber)) +
-  geom_path(linewidth = 0.3) +
-  geom_point(size = 2.5) +
-  scale_colour_tableau("Tableau 10") +
-  theme_cowplot(12) +
-  scale_x_continuous("Hours since start", expand = c(0.03, 0), n.breaks = 20) +
-  scale_y_continuous("Mass-specific MO₂")
+plot_exp(path = exp_path, chambers = -4) #chamber 4 (blank) omitted
+
 ```
 
-Note that chamber 4 was the background respiration with the mass entered as an arbitrary 1 g, so it may make more sense to plot with it removed:
 
-```{r}
+The setting `show_cycle_labels = FALSE` will remove the cycle number labels if they are getting too busy. Note that the output is a ggplot, and so can be customised further by adding ggplot2 layers to it, e.g. theme() to change theme elements.  
 
-ggplot(mo2s |> subset(chamber != 4),
-       aes(x = TIME.HOURS, y = MO2 / 100,
-           colour = chamber, shape = chamber)) +
-  geom_path(linewidth = 0.3) +
-  geom_point(size = 2.5) +
-  scale_colour_tableau("Tableau 10") +
-  theme_cowplot(12) +
-  scale_x_continuous("Hours since start", expand = c(0.03, 0), n.breaks = 20) +
-  scale_y_continuous("Mass-specific MO₂")
+## Monitoring
+
+For quick quality control checks and monitoring ongoing experiments, the `print_exp_mo2s()` function will provide an overview of both MO2 values and R^2s.
+
+```{r, max.height = '100px'}
+print_exp_mo2s(exp_path)
 ```
 
-## Cycle Summary
 
-Summarize PO₂ ranges and correlations:
+<!-- ## Cycle Summary -->
 
-```{r}
-cyc_summary <- cycle_summary(exp_path)
-head(cyc_summary, n = 3)
-```
+<!-- Plot PO₂ min/max per cycle: -->
 
-Plot PO₂ min/max per cycle:
+<!-- ```{r, fig.width = 8} -->
+<!-- mo2_data <- calc_exp_mo2s(path = exp_path, report = FALSE) -->
 
-```{r}
-cyc_po2_range <- cyc_summary[, 1:8]
-cyc_po2_range$cycle <- 1:nrow(cyc_po2_range)
 
-cyc_po2_long <- cyc_po2_range %>%
-  pivot_longer(cols = -cycle,
-               names_to = c("chamber", "po2type"),
-               names_pattern = "ch(\\d+)\\.po2\\.(min|max)",
-               values_to = "po2") %>%
-  pivot_wider(names_from = po2type, values_from = po2)
-
-ggplot(cyc_po2_long |> subset(chamber != "000"),
-       aes(x = cycle, colour = chamber)) +
-  geom_segment(aes(y = min, yend = max),
-               position = position_dodge2(width = .6),
-               linewidth = 0.8) +
-  scale_colour_tableau("Classic 10") +
-  theme_cowplot(12) +
-  scale_x_continuous(breaks = 1:max(cyc_po2_long$cycle)) +
-  scale_y_continuous(bquote('pO[2] range during cycle (% O[2] sat)'))
-```
+<!-- ggplot(mo2_data, -->
+<!--        aes(x = cycle, colour = as.factor(chamber))) + -->
+<!--   geom_segment(aes(y = minimum.po2, yend = max.po2), -->
+<!--                position = position_dodge2(width = .6), -->
+<!--                linewidth = 0.8) + -->
+<!--   theme_classic(16) + -->
+<!--   scale_colour_brewer("Chamber", palette = "Dark2")+ -->
+<!--   scale_y_continuous(expression(p*O[2]~"range during cycle"~`(`*'%'~O[2]~"sat"*`)`)) + -->
+<!--   labs(x = "Cycle #") -->
+<!-- ``` -->

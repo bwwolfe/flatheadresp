@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_cycle.R
 \name{get_cycle_min_max}
 \alias{get_cycle_min_max}
-\title{Get min and max PO2 values for each chamber in a cycle}
+\title{Get summary PO2 values for each chamber in a cycle}
 \usage{
 get_cycle_min_max(cycle)
 }
@@ -10,10 +10,12 @@ get_cycle_min_max(cycle)
 \item{cycle}{Dataframe. A cycle dataframe as returned by \code{read_cycle()}.}
 }
 \value{
-A named numeric vector of min and max \eqn{PO_{2}} values for each chamber.
+A named numeric vector of summary \eqn{PO_{2}} values for each chamber.
+Names are in the format \verb{ch[chamber number].[statistic].po2}.
 }
 \description{
-Extracts the minimum and maximum non-zero \eqn{PO_{2}} values for each chamber from a cycle dataframe.
+Extracts the average, median, minimum, maximum, and range of non-zero
+\eqn{PO_{2}} values for each chamber from a cycle dataframe.
 }
 \examples{
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",

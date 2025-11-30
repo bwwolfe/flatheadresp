@@ -13,10 +13,11 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' get_chambers(path = "~/data/Resp/Experiment_1")
-#' }
-
+#' # Locate the example AquaResp experiment directory shipped with the package
+#' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+#'                             package = "flatheadresp")
+#' print(exp_dir_path)
+#' get_chambers(path = exp_dir_path)
 get_chambers <- function(path) {
   gsub("Summary data resp |.txt",
        "",
@@ -26,7 +27,6 @@ get_chambers <- function(path) {
 
 }
 
-#
 #' Get metadata for a specific chamber from an AquaResp experiment
 #'
 #' This function reads the first lines of the summary data file for a given chamber
@@ -39,9 +39,12 @@ get_chambers <- function(path) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' get_chamber_metadata(path = "~/data/Resp/Experiment_1", chamber = 1)
-#' }
+#' # Locate the example AquaResp experiment directory shipped with the package
+#' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+#'                             package = "flatheadresp")
+#' print(exp_dir_path)
+#'
+#' get_chamber_metadata(path = exp_dir_path, chamber = 1)
 get_chamber_metadata <- function(path, chamber) {
 
   sum_metadata <- list()
@@ -78,9 +81,11 @@ get_chamber_metadata <- function(path, chamber) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' get_exp_metadata(path = "~/data/Resp/Experiment_1")
-#' }
+#' # Locate the example AquaResp experiment directory shipped with the package
+#' exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+#'                             package = "flatheadresp")
+#' print(exp_dir_path)
+#' get_exp_metadata(path = exp_dir_path)
 
 get_exp_metadata <- function(path) {
   chambers <- get_chambers(path)
@@ -94,62 +99,71 @@ get_exp_metadata <- function(path) {
   do.call(rbind, lapply(metadata_list, as.data.frame))
 }
 
+
 #' Get \eqn{MO_{2}} values from an AquaResp experiment
 #'
-#' This function reads the summary data files and returns mass-specific oxygen consumption (\eqn{MO_{2}})
-#' values for one or more chambers. If no chamber is specified, data from all chambers is returned.
+#' This function reads the summary data files and returns mass-specific oxygen consumption
+#' (\eqn{MO_{2}}) values for one or more chambers. If no chambers are specified, data from all
+#' chambers is returned.
 #'
 #' @param path Character. The directory location of the AquaResp experiment on disk.
-#' @param chamber Optional numeric. The chamber number(s) to retrieve \eqn{MO_{2}} values for. If omitted, all chambers are returned.
+#' @param chambers Optional integer vector. Chamber numbers to include or exclude.
+#'   Use negative values to exclude chambers (e.g., \code{c(-2, -3)} excludes chambers 2 and 3).
 #'
-#' @return A dataframe with columns for chamber number, cycle number, and \eqn{MO_{2}} values.
+#' @return A \code{data.frame} with columns for chamber number, cycle number, and \eqn{MO_{2}} values.
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' get_exp_MO2s(path = "~/data/Resp/Experiment_1") # All chambers
-#' get_exp_MO2s(path = "~/data/Resp/Experiment_1", chamber = 1) # Chamber 1 only
-#' }
+#' # Locate the example AquaResp experiment directory shipped with the package
+#' exp_dir_path <- system.file("extdata", "aquaresp_experiment", package = "flatheadresp")
+#' print(exp_dir_path)
+#' get_exp_mo2s(path = exp_dir_path) # All chambers
+#' get_exp_mo2s(path = exp_dir_path, chambers = 1) # Chamber 1 only
+#' get_exp_mo2s(path = exp_dir_path, chambers = c(-2, -3)) # Exclude chambers 2 and 3
 
-get_exp_MO2s <- function(path, chamber = NULL) {
+get_exp_mo2s <- function(path, chambers = NULL) {
 
-  chambers <- get_chambers(path)
+  # Get all available chambers
+  all_chambers <- get_chambers(path)
 
-  if (is.null(chamber)) {
-    summary_data_list <-
-      lapply(chambers, function(i) {
-        sum_path <-
-          file.path(path, paste0("Summary data resp ", i, ".txt"))
-
-        sum_data <-
-          utils::read.table(sum_path,
-                     skip = 15,
-                     sep = ";",
-                     header = TRUE) |>
-          (\(res) res[, setdiff(names(res), "X"), drop = FALSE])()
-
-        return(data.frame(chamber = i, cycle = 1:nrow(sum_data), sum_data))
-      })
-
+  # Resolve selection
+  if (is.null(chambers)) {
+    sel_chambers <- all_chambers
   } else {
-    if (!all(chamber %in% chambers))
-      stop(paste("chamber should be one of", paste(chambers, collapse = ", ")))
+    chambers <- as.integer(chambers)
 
-    summary_data_list <-
-      lapply(chamber, function(i) {
-        sum_path <-
-          file.path(path, paste0("Summary data resp ", i, ".txt"))
+    # Validate requested chambers
+    missing <- setdiff(abs(chambers), all_chambers)
+    if (length(missing) > 0) {
+      cli::cli_abort("Invalid chamber(s): {missing}. Available: {all_chambers}")
+    }
 
-        sum_data <-
-          utils::read.table(sum_path,
-                     skip = 15,
-                     sep = ";",
-                     header = TRUE) |>
-          (\(res) res[, setdiff(names(res), "X"), drop = FALSE])()
-
-
-        return(data.frame(chamber = i, cycle = 1:nrow(sum_data), sum_data))
-      })
+    # Apply inclusion/exclusion logic
+    if (any(chambers < 0)) {
+      exclude <- abs(chambers[chambers < 0])
+      sel_chambers <- setdiff(all_chambers, exclude)
+    } else {
+      sel_chambers <- chambers
+    }
   }
-  do.call('rbind', summary_data_list)
+
+  # Read summary data for selected chambers
+  summary_data_list <- lapply(sel_chambers, function(i) {
+    sum_path <- file.path(path, paste0("Summary data resp ", i, ".txt"))
+
+    sum_data <- utils::read.table(sum_path,
+                                  skip = 15,
+                                  sep = ";",
+                                  header = TRUE) |>
+      (\(res) res[, setdiff(names(res), "X"), drop = FALSE])()
+
+    data.frame(chamber = i, cycle = seq_len(nrow(sum_data)), sum_data)
+  })
+
+  # Combine and reorder columns
+  summary_dataframe <- do.call("rbind", summary_data_list)
+  summary_dataframe <- summary_dataframe[, c("cycle", "chamber", setdiff(names(summary_dataframe), c("cycle", "chamber")))]
+
+  # Sort by cycle then chamber
+  summary_dataframe[order(summary_dataframe$cycle, summary_dataframe$chamber), ]
 }

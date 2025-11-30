@@ -10,10 +10,10 @@ get_cycle_R2s(cycle)
 \item{cycle}{Dataframe. A cycle dataframe as returned by \code{read_cycle()}.}
 }
 \value{
-A named numeric vector of correlation coefficients and p-values for each chamber.
+A named numeric vector of correlation coefficients (both r and r^2 and p-values for each chamber.
 }
 \description{
-Performs Pearson correlation (r) tests between \eqn{PO_{2}} values and Unix time for each chamber in a cycle, retyrns r ^ 2
+Performs Pearson correlation (r) tests between \eqn{PO_{2}} values and time in seconds for each chamber in a cycle measurement period, returns r, r ^ 2, p value
 }
 \examples{
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",

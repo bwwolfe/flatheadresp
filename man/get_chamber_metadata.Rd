@@ -19,7 +19,10 @@ This function reads the first lines of the summary data file for a given chamber
 and extracts experimental metadata such as fish mass, respirometer volume, and start time.
 }
 \examples{
-\dontrun{
-get_chamber_metadata(path = "~/data/Resp/Experiment_1", chamber = 1)
-}
+# Locate the example AquaResp experiment directory shipped with the package
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+print(exp_dir_path)
+
+get_chamber_metadata(path = exp_dir_path, chamber = 1)
 }

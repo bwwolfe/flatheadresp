@@ -43,7 +43,7 @@ plot_exp <- function(path,
                      show_cycle_labels = TRUE){
 
   # Generate data from path
-  data <- get_exp_MO2s(path)
+  data <- get_exp_mo2s(path)
   data[[time_col]] <- as.POSIXct(data[[time_col]])
   data[[chamber_col]] <- as.integer(data[[chamber_col]])
 

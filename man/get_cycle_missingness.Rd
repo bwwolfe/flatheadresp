@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{get_cycle_missingness}
 \alias{get_cycle_missingness}
-\title{Calculate percentage of zero PO2 values in a cycle}
+\title{Calculate percentage of missing/zero PO2 values in a cycle}
 \usage{
 get_cycle_missingness(cycle)
 }
@@ -11,11 +11,16 @@ get_cycle_missingness(cycle)
 \item{cycle}{Dataframe. A cycle dataframe as returned by \code{read_cycle()}.}
 }
 \value{
-A named vector of percentages (0 to 100\%) indicating missingness per chamber.
+A named vector of proportion (0 to 1) indicating missing pO2 values in
+the cycle.
 }
 \description{
-Computes the percentage of zero values in each \eqn{PO_{2}} column of a cycle dataframe.
-Values greater than zero would have an incorrect \eqn{R^{2}} as calculated by AquaResp.
+Computes the percentage of zero values in each \eqn{PO_{2}} column of a cycle
+dataframe. Values greater than zero would have an incorrect \eqn{R^{2}} as
+calculated by AquaResp. Missing values are defined as pO2 less than 0 or
+NA/NaN etc. 0 is the common reading when a value is not recorded in one second
+e.g. if the computer is busy, -300 is recorded when a firesting probe is not
+in its housing.
 }
 \examples{
 exp_dir_path <- system.file("extdata", "aquaresp_experiment",

@@ -17,7 +17,9 @@ This function retrieves metadata for all active chambers in the experiment direc
 and returns it as a dataframe, with one row per chamber.
 }
 \examples{
-\dontrun{
-get_exp_metadata(path = "~/data/Resp/Experiment_1")
-}
+# Locate the example AquaResp experiment directory shipped with the package
+exp_dir_path <- system.file("extdata", "aquaresp_experiment",
+                            package = "flatheadresp")
+print(exp_dir_path)
+get_exp_metadata(path = exp_dir_path)
 }

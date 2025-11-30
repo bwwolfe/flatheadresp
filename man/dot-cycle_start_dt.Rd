@@ -15,3 +15,4 @@ POSIXct datetime
 \description{
 Get the start time of a cycle (local time of the first oxygen measurement recorded)
 }
+\keyword{internal}

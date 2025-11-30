@@ -4,7 +4,7 @@
 \alias{cycle_summary}
 \title{Summarize all cycles in an AquaResp experiment}
 \usage{
-cycle_summary(path, chambers = NULL, long = FALSE)
+cycle_summary(path, chambers = NULL, long = TRUE)
 }
 \arguments{
 \item{path}{Character. Experiment directory.}
@@ -13,13 +13,15 @@ cycle_summary(path, chambers = NULL, long = FALSE)
 (e.g. \code{c(1,2)}), or negative to exclude (e.g. \code{-4} means keep 1,2,3).
 Default \code{NULL} (all chambers).}
 
-\item{long}{Logical. If \code{TRUE}, returns a long tibble; otherwise wide data frame.}
+\item{long}{Logical. If \code{TRUE}, returns a long tibble; otherwise wide
+data frame with \code{chX.} appended to the column names, where X is the chamber
+number.}
 }
 \value{
-A data.frame (wide, default) or tibble (long) summarizing all cycles.
+A data.frame (wide) or tibble (long, default) summarizing all cycles.
 }
 \description{
-Reads every cycle under \verb{path/All slopes}, summarizes MO2, PO2 min/max,
-R^2, R^2 p-value, and \% missing, with optional chamber subsetting and
+Reads every cycle under \verb{path/All slopes}, summarizes MO2, PO2 avg/median/min/max/delta,
+R^2, R^2 p-value, and \% missing values, with optional chamber subsetting and
 long-format output.
 }

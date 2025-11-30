@@ -4,7 +4,13 @@
 \alias{calc_cycle_mo2s}
 \title{Calculate MO2 values for an AquaResp cycle}
 \usage{
-calc_cycle_mo2s(cycle, path, chambers = NULL, long = FALSE)
+calc_cycle_mo2s(
+  cycle,
+  path,
+  chambers = NULL,
+  long = TRUE,
+  remove_missing = TRUE
+)
 }
 \arguments{
 \item{cycle}{Numeric or data.frame.
@@ -20,25 +26,23 @@ e.g. \code{c(1,2)}; or \strong{negative} to exclude, e.g. \code{-4} (means keep 
 Default \code{NULL} (all chambers).}
 
 \item{long}{Logical. If \code{TRUE}, return a tibble in long format
-with columns \code{cycle}, \code{chamber}, and \code{mo2}. Default \code{FALSE} (wide named vector).}
+with columns \code{cycle}, \code{chamber}, \code{MO2}, \code{SLOPE}, \code{Std.Err}, \code{Intercept}.
+Default \code{FALSE} (wide named vector).}
+
+\item{remove_missing}{Logical. If \code{TRUE} (default), missing \eqn{PO_{2}} measurements
+are filtered out before calculating slopes used for MO2 estimation. \code{FALSE} would
+give the same (sometimes spurious) results as AquaResp.}
 }
 \value{
-Either a named numeric vector (wide, default) with names like \code{"ch1.mo2"},
-or a tibble (long) with columns \code{cycle}, \code{chamber}, \code{mo2}.
+If \code{long = FALSE}, a named numeric vector including
+\verb{ch\{N\}.MO2}, \verb{ch\{N\}.SLOPE}, \verb{ch\{N\}.Std.Err}, \verb{ch\{N\}.Intercept}.
+If \code{long = TRUE}, a tibble with columns \code{cycle}, \code{chamber}, \code{MO2}, \code{SLOPE}, \code{Std.Err}, \code{Intercept}.
 }
 \description{
 Calculates mass-specific oxygen consumption (\eqn{MO_{2}}) for each chamber
-in a given cycle using linear regression on \eqn{PO_{2}} data and experiment-level metadata.
+in a given cycle using linear regression on \eqn{PO_{2}} data and experiment-level metadata. Also returns regression stats slope, standard error and intercept.
 }
 \details{
 Accepts either a \strong{numeric cycle ID} (e.g., 1) or a \strong{cycle dataframe} returned by \code{read_cycle()}.
 \code{path} is always required to access metadata.
-}
-\examples{
-exp_dir_path <- system.file("extdata", "aquaresp_experiment", package = "flatheadresp")
-# Using a cycle number (wide):
-calc_cycle_mo2s(1, path = exp_dir_path)
-# Using pre-read cycle data (long, chambers 1 & 2):
-cy <- read_cycle(1, exp_dir_path)
-calc_cycle_mo2s(cy, path = exp_dir_path, chambers = c(1,2), long = TRUE)
 }

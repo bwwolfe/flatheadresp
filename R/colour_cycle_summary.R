@@ -346,7 +346,7 @@ print_matrix_exp <- function(
 #' @details
 #' This function:
 #' \itemize{
-#'   \item Loads AquaResp experiment data using \code{\link{get_exp_MO2s}}.
+#'   \item Loads AquaResp experiment data using \code{\link{get_exp_mo2s}}.
 #'   \item Validates required columns: chamber, cycle, \eqn{MO_2}, and \eqn{R^2}.
 #'   \item Checks for duplicate (cycle, chamber) combinations and stops if found.
 #'   \item Constructs:
@@ -388,8 +388,8 @@ print_exp_mo2s <- function(
     ...
 ) {
   # ---- Load experiment MO2 data ----
-  exp_mo2s <- get_exp_MO2s(path)
-  if (!is.data.frame(exp_mo2s)) stop("get_exp_MO2s() did not return a data.frame.")
+  exp_mo2s <- get_exp_mo2s(path)
+  if (!is.data.frame(exp_mo2s)) stop("get_exp_mo2s() did not return a data.frame.")
 
   # ---- Validate required columns ----
   required_cols <- c(chamber_col, cycle_col, mo2_col, r2_col)

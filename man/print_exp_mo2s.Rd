@@ -45,7 +45,7 @@ with optional flags and start times for each cycle.
 \details{
 This function:
 \itemize{
-\item Loads AquaResp experiment data using \code{\link{get_exp_MO2s}}.
+\item Loads AquaResp experiment data using \code{\link{get_exp_mo2s}}.
 \item Validates required columns: chamber, cycle, \eqn{MO_2}, and \eqn{R^2}.
 \item Checks for duplicate (cycle, chamber) combinations and stops if found.
 \item Constructs:
