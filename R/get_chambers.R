@@ -44,7 +44,7 @@ get_chambers <- function(path) {
 #' print(exp_dir_path)
 #'
 #' get_chamber_metadata(path = exp_dir_path, chamber = 1)
-get_chamber_metadata <- function(path, chamber) {
+get_chamber_metadata <- function(path, chamber, tz = "Australia/Hobart") {
 
   sum_metadata <- list()
 
@@ -63,7 +63,7 @@ get_chamber_metadata <- function(path, chamber) {
   close(con)
 
   sum_metadata$exp_start <-
-    sum_metadata$`Experiment start, UNIX time` |> as.POSIXct()
+    sum_metadata$`Experiment start, UNIX time` |> as.POSIXct(origin = "1970-01-01", tz = tz)
 
   sum_metadata <- c(list(chamber = chamber), sum_metadata)
   return(sum_metadata)
