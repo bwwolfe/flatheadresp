@@ -234,6 +234,9 @@ calc_exp_mo2s <- function(path,
     if (length(crit_idx) == 0) {
       # Combine header and bullet into one string
       cli::cli_h3(sprintf("%s {.neutral {0}} cycles", cycles_header_text))
+      # these patched in because error thrown if there were no low R2 in the data
+      cycles_all <- character()
+      n_all <- length(cycles_all)
     } else {
       cycles_meeting <- orig[[cycle_col]][crit_idx]
       chambers_meeting <- orig[[chamber_col]][crit_idx]
