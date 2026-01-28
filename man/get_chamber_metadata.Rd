@@ -4,7 +4,7 @@
 \alias{get_chamber_metadata}
 \title{Get metadata for a specific chamber from an AquaResp experiment}
 \usage{
-get_chamber_metadata(path, chamber)
+get_chamber_metadata(path, chamber, tz = "Australia/Hobart")
 }
 \arguments{
 \item{path}{Character. The directory location of the AquaResp experiment on disk.}
