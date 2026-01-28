@@ -24,3 +24,6 @@ Imports:
     cowplot,
     tibble,
     rlang
+Depends: 
+    R (>= 3.5)
+LazyData: true
