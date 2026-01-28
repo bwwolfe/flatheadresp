@@ -33,6 +33,7 @@ get_chambers <- function(path) {
 #'
 #' @param path Character. The directory location of the AquaResp experiment on disk.
 #' @param chamber Numeric. The chamber number to retrieve metadata for. Use `get_chambers()` to list available chambers.
+#' @param tz Character. Time zone of datetimes in the experimental data.
 #'
 #' @return A named list containing metadata for the specified chamber.
 #' @export

@@ -10,6 +10,8 @@ get_chamber_metadata(path, chamber, tz = "Australia/Hobart")
 \item{path}{Character. The directory location of the AquaResp experiment on disk.}
 
 \item{chamber}{Numeric. The chamber number to retrieve metadata for. Use \code{get_chambers()} to list available chambers.}
+
+\item{tz}{Character. Time zone of datetimes in the experimental data.}
 }
 \value{
 A named list containing metadata for the specified chamber.
