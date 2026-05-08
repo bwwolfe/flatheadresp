@@ -131,8 +131,11 @@ get_cycle_R2s <-
         # there's a bug
         secs.no0 <- secs[x != 0]
         x.no0 <- x[x != 0]
-        cor_result <-
-          stats::cor.test(x = x.no0, y = secs.no0, method = "pearson")
+        if (length(x.no0) < 2) {
+          return(list(estimate = stats::setNames(NA_real_, "cor"),
+                      p.value  = NA_real_))
+        }
+        stats::cor.test(x = x.no0, y = secs.no0, method = "pearson")
       }, secs = cycle$Unix.Time - min(cycle$Unix.Time))
 
     rs <- lapply(cors, function(x) {
@@ -214,20 +217,24 @@ get_cycle_R2s <-
 #'   If `long = TRUE`, a tibble with columns `cycle`, `chamber`, `MO2`, `SLOPE`, `Std.Err`, `Intercept`.
 
 calc_cycle_mo2s <- function(cycle, path, chambers = NULL, long = TRUE,
-                            remove_missing = TRUE) {
+                            remove_missing = TRUE, cycle_id = NULL) {
   # --- Load/validate cycle data ------------------------------------------------
   if (is.numeric(cycle) && length(cycle) == 1L) {
     cycle_id   <- as.integer(cycle)
     cycle_data <- read_cycle(cycle_id, path)
   } else if (is.data.frame(cycle)) {
     cycle_data <- cycle
-    # Try to detect cycle ID if present; otherwise NA
-    cycle_id <- if ("Cycle" %in% names(cycle_data)) {
-      unique(cycle_data$Cycle)
-    } else if ("cycle" %in% names(cycle_data)) {
-      unique(cycle_data$cycle)
-    } else NA_integer_
-    if (length(cycle_id) != 1L) cycle_id <- NA_integer_
+    # Use explicitly supplied cycle_id if provided, otherwise try to detect it
+    if (is.null(cycle_id)) {
+      cycle_id <- if ("Cycle" %in% names(cycle_data)) {
+        unique(cycle_data$Cycle)
+      } else if ("cycle" %in% names(cycle_data)) {
+        unique(cycle_data$cycle)
+      } else NA_integer_
+      if (length(cycle_id) != 1L) cycle_id <- NA_integer_
+    } else {
+      cycle_id <- as.integer(cycle_id)
+    }
   } else {
     stop("`cycle` must be a single numeric cycle number or a cycle data.frame as returned by `read_cycle()`.")
   }
@@ -256,6 +263,16 @@ calc_cycle_mo2s <- function(cycle, path, chambers = NULL, long = TRUE,
   ch_ids     <- suppressWarnings(as.integer(sub("^ch(\\d+)$", "\\1", base_names)))
 
   # --- Fit PO2 ~ time, collect slope SE and intercept -------------------------
+  na_coef_matrix <- function() {
+    matrix(
+      NA_real_, nrow = 2, ncol = 4,
+      dimnames = list(
+        c("(Intercept)", "cycle_time_x"),
+        c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
+      )
+    )
+  }
+
   fit_summaries <-
     lapply(seq_along(po2_cols), function(i) {
       po2s <- cycle_data[[po2_cols[i]]]
@@ -263,8 +280,37 @@ calc_cycle_mo2s <- function(cycle, path, chambers = NULL, long = TRUE,
         cycle_time_x <- cycle_time_x[po2s > 0 & !is.na(po2s)]
         po2s <- po2s[po2s > 0 & !is.na(po2s)]
       }
-      fit_sum <- summary(stats::lm(po2s ~ cycle_time_x))
-      fit_sum$coefficients  # rows: "(Intercept)", "cycle_time_x"
+      # Need at least 2 distinct time points to estimate a slope
+      if (length(po2s) < 2 || length(unique(cycle_time_x)) < 2) {
+        ch_label <- if (!is.na(ch_ids[i])) paste0("chamber ", ch_ids[i]) else po2_cols[i]
+        cli::cli_alert_warning(
+          "Omitting cycle {cycle_id}, {ch_label}: only {length(po2s)} valid PO2 \\
+          value(s) after filtering \u2014 MO2 set to NA."
+        )
+        return(na_coef_matrix())
+      }
+      # Guard against any other lm failure (e.g. rank-deficient model)
+      coef_mat <- tryCatch(
+        summary(stats::lm(po2s ~ cycle_time_x))$coefficients,
+        error = function(e) {
+          ch_label <- if (!is.na(ch_ids[i])) paste0("chamber ", ch_ids[i]) else po2_cols[i]
+          cli::cli_alert_warning(
+            "Omitting cycle {cycle_id}, {ch_label}: lm() failed ({conditionMessage(e)}) \\
+            \u2014 MO2 set to NA."
+          )
+          na_coef_matrix()
+        }
+      )
+      # If lm succeeded but cycle_time_x row is missing (rank-deficient), fill with NAs
+      if (!"cycle_time_x" %in% rownames(coef_mat)) {
+        ch_label <- if (!is.na(ch_ids[i])) paste0("chamber ", ch_ids[i]) else po2_cols[i]
+        cli::cli_alert_warning(
+          "Omitting cycle {cycle_id}, {ch_label}: slope term dropped from model \\
+          (constant predictor?) \u2014 MO2 set to NA."
+        )
+        return(na_coef_matrix())
+      }
+      coef_mat
     })
 
   # --- Build outputs for selected chambers ------------------------------------
@@ -387,7 +433,8 @@ cycle_summary <- function(path, chambers = NULL, long = TRUE) {
       # Wide vectors with consistent names
       mo2   <- calc_cycle_mo2s(cycle_data, path,
                                chambers = sel_chambers,
-                               long = FALSE)
+                               long = FALSE,
+                               cycle_id = cycle_id)
       mm    <- filter_vec_by_ch(get_cycle_min_max(cycle_data), sel_chambers)
       r2    <- filter_vec_by_ch(get_cycle_R2s(cycle_data), sel_chambers)
       miss  <- filter_vec_by_ch(get_cycle_missingness(cycle_data), sel_chambers)

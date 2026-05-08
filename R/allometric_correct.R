@@ -93,8 +93,8 @@ allometric_correct <- function(mo2_data,
 
   # --- Compute corrected MO2: mg O2 per hour per kg^b ---
   if(mass_specific){
-  # MO2_b = MO2 * Mass^(1 - b)
-  corrected <- mo2_data[[mo2_col]] * (mo2_data[[mass_col]]^(1 - b))
+    # MO2_b = MO2 * Mass^(1 - b)
+    corrected <- mo2_data[[mo2_col]] * (mo2_data[[mass_col]]^(1 - b))
   } else {
     corrected <- mo2_data[[mo2_col]] / (mo2_data[[mass_col]]^b)
   }

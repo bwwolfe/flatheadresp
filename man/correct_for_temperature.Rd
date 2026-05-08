@@ -75,7 +75,7 @@ mo2_data <- calc_exp_mo2s(path = exp_dir_path)
 # Default: uses the package dataset temp_correct_data
 res1 <- correct_for_temperature(mo2_data, new_temp = 16, q10 = 2)
 
-
+library(ggplot2)
 ggplot(res1|>subset(chamber != 4)) +
   geom_path(aes(TIME.HOURS, MO2, colour = factor(chamber))) +
   geom_path(aes(TIME.HOURS, MO2_q10_16, colour = factor(chamber), group = chamber),
