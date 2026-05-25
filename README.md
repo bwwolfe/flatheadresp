@@ -4,6 +4,7 @@
 # flatheadresp
 
 <!-- badges: start -->
+[![DOI](https://zenodo.org/badge/1075804520.svg)](https://doi.org/10.5281/zenodo.20370947)  
 <!-- badges: end -->
 
 The goal of flatheadresp is to streamline working with respirometry data
